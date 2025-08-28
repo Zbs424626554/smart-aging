@@ -5,7 +5,7 @@ export const connectDB = async () => {
   if (!uri) {
     console.warn('⚠️  MongoDB URI 未配置，使用默认连接');
     try {
-      await mongoose.connect('mongodb://localhost:27017/elder_care');
+      await mongoose.connect('mongodb+srv://424626554:Zbs424626554@zbs.ngrjull.mongodb.net/test');
       console.log('MongoDB 连接成功 -> 使用默认数据库: elder_care');
     } catch (error) {
       console.error('MongoDB 连接失败，但服务器将继续运行:', error);
