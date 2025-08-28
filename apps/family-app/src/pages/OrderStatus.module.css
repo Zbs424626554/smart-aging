@@ -1,0 +1,219 @@
+.orderStatus {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.container {
+  padding: 16px;
+}
+
+.progressCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+}
+
+.progressTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  padding: 16px 16px 0 16px;
+  margin-bottom: 16px;
+}
+
+.progressSteps {
+  padding: 0 16px 16px 16px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 40px;
+  width: 2px;
+  height: 20px;
+  background-color: #e8e8e8;
+}
+
+.step.completed:not(:last-child)::after {
+  background-color: #52c41a;
+}
+
+.stepIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  background-color: #f5f5f5;
+  flex-shrink: 0;
+}
+
+.step.completed .stepIcon {
+  background-color: #f6ffed;
+}
+
+.step.current .stepIcon {
+  background-color: #e6f7ff;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.stepStatus {
+  font-size: 14px;
+  color: #666;
+}
+
+.step.completed .stepTitle {
+  color: #52c41a;
+}
+
+.step.current .stepTitle {
+  color: #1677ff;
+}
+
+.nurseCard,
+.serviceCard,
+.priceCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  padding: 16px 16px 0 16px;
+  margin-bottom: 8px;
+}
+
+.cardTitle svg {
+  color: #1677ff;
+}
+
+.nurseInfo {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+}
+
+.nurseAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #e6f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: #1677ff;
+  flex-shrink: 0;
+}
+
+.nurseDetails {
+  flex: 1;
+}
+
+.nurseName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.nurseRating {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.nurseSpecialties {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.contactBtn {
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.priceInfo {
+  padding: 16px;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.paymentStatus {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.actionSection {
+  margin-top: 24px;
+  padding: 0 16px;
+}
+
+.waitingMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.waitingMessage svg {
+  color: #1677ff;
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .container {
+    padding: 12px;
+  }
+
+  .stepIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stepTitle {
+    font-size: 14px;
+  }
+
+  .stepStatus {
+    font-size: 12px;
+  }
+}

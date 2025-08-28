@@ -1,0 +1,161 @@
+.orderConfirm {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.container {
+  padding: 16px;
+}
+
+.nurseCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+}
+
+.nurseHeader {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+}
+
+.nurseAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #e6f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: #1677ff;
+}
+
+.nurseInfo {
+  flex: 1;
+}
+
+.nurseName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.nurseSpecialties {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nurseRating {
+  text-align: center;
+  margin-left: 16px;
+}
+
+.ratingScore {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ff6b35;
+}
+
+.ratingText {
+  font-size: 12px;
+  color: #999;
+}
+
+.serviceCard,
+.priceCard,
+.noticeCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  padding: 16px 16px 0 16px;
+  margin-bottom: 8px;
+}
+
+.cardTitle svg {
+  color: #1677ff;
+}
+
+.priceDetails {
+  padding: 16px;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.priceDivider {
+  height: 1px;
+  background-color: #e8e8e8;
+  margin: 16px 0;
+}
+
+.priceRowTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.totalAmount {
+  color: #ff6b35;
+  font-size: 18px;
+}
+
+.noticeContent {
+  padding: 16px;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.noticeContent p {
+  margin: 8px 0;
+}
+
+.submitSection {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background-color: white;
+  border-top: 1px solid #e8e8e8;
+  z-index: 100;
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .container {
+    padding: 12px;
+  }
+
+  .nurseHeader {
+    padding: 12px;
+  }
+
+  .nurseAvatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .nurseName {
+    font-size: 16px;
+  }
+}

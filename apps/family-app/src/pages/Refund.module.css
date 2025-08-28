@@ -1,0 +1,249 @@
+.refundPage {
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #0b6cff;
+  color: #fff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.content {
+  padding: 20px 16px;
+}
+
+.orderInfo {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
+}
+
+.orderNo {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ef4444;
+  margin-bottom: 8px;
+}
+
+.subject {
+  font-size: 16px;
+  color: #1f2a37;
+}
+
+.refundForm {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
+}
+
+.formTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2a37;
+  margin-bottom: 16px;
+}
+
+.reasonList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reasonItem {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reasonItem:hover {
+  border-color: #0b6cff;
+  background: #f8faff;
+}
+
+.reasonItem input[type="radio"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  accent-color: #0b6cff;
+}
+
+.reasonText {
+  font-size: 14px;
+  color: #1f2a37;
+}
+
+.customReason {
+  margin-top: 12px;
+}
+
+.reasonInput {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.reasonInput:focus {
+  outline: none;
+  border-color: #0b6cff;
+  box-shadow: 0 0 0 3px rgba(11, 108, 255, 0.1);
+}
+
+.refundPolicy {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
+}
+
+.policyTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2a37;
+  margin-bottom: 12px;
+}
+
+.policyContent {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.policyContent p {
+  margin-bottom: 8px;
+}
+
+.refundButton {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.refundButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.refundButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.resultContainer {
+  background: #fff;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
+}
+
+.successIcon,
+.failedIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.resultTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2a37;
+  margin-bottom: 12px;
+}
+
+.resultDesc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.autoRedirect {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.retryButton,
+.backButton {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.retryButton {
+  background: #0b6cff;
+  color: #fff;
+}
+
+.retryButton:hover {
+  background: #005ce6;
+}
+
+.backButton {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.backButton:hover {
+  background: #e5e7eb;
+}

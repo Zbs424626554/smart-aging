@@ -1,0 +1,547 @@
+.health {
+  background: transparent;
+  min-height: 100vh;
+}
+
+/* 老人选择器 */
+.elderlySelector {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.elderlySelector:active {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.elderlyInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.elderlyAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: #59a5f5;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.elderlyDetails {
+  flex: 1;
+}
+
+.elderlyName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.elderlyStatus {
+  font-size: 14px;
+  color: #666;
+}
+
+.selectorArrow {
+  color: #999;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.elderlySelector.active .selectorArrow {
+  transform: rotate(180deg);
+}
+
+/* 下拉选择器 */
+.elderlyDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.elderlyOption {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.elderlyOption:last-child {
+  border-bottom: none;
+}
+
+.elderlyOption:active {
+  background: #f8f9fa;
+}
+
+.elderlyOption.selected {
+  background: #e6f7ff;
+}
+
+.elderlyOptionAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: #59a5f5;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.elderlyOptionInfo {
+  flex: 1;
+}
+
+.elderlyOptionName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.elderlyOptionStatus {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 今日健康数据 */
+.healthDataCard {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.healthDataHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.healthDataHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.healthDataActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.healthDate {
+  font-size: 14px;
+  color: #666;
+  background: #f8f9fa;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.refreshHealthButton {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  width: 32px;
+  height: 32px;
+}
+
+.refreshHealthButton:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.refreshHealthButton:active {
+  background: #dee2e6;
+}
+
+.refreshHealthButton i {
+  font-size: 12px;
+}
+
+.healthMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metricCard {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  transition: all 0.3s ease;
+  min-height: 72px;
+}
+
+.metricCard:active {
+  background: #e9ecef;
+}
+
+.metricIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-right: 10px;
+  background: white;
+  flex-shrink: 0;
+}
+
+.metricContent {
+  flex: 1;
+  min-width: 0;
+  padding-right: 6px;
+}
+
+.metricLabel {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.metricValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.metricUnit {
+  font-size: 12px;
+  color: #999;
+}
+
+.metricStatusContainer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-width: 46px;
+}
+
+/* 状态标签配色 */
+.statusNormal {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.statusWarning {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.statusDanger {
+  background: #fff1f0;
+  color: #ff4d4f;
+}
+
+
+
+/* 健康建议 */
+.healthAdvice {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.adviceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.healthAdvice h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.aiAdviceButton {
+  background: #0077C2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.aiAdviceButton:hover {
+  background: #005a9e;
+}
+
+.aiAdviceButton:active {
+  background: #004080;
+}
+
+.aiAdviceButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.aiAdviceButton i {
+  font-size: 12px;
+}
+
+.adviceActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refreshButton {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  width: 36px;
+  height: 36px;
+}
+
+.refreshButton:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.refreshButton:active {
+  background: #dee2e6;
+}
+
+.refreshButton:disabled {
+  background: #f8f9fa;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.refreshButton i {
+  font-size: 14px;
+}
+
+.adviceList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adviceItem {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.adviceItem:active {
+  background: #e9ecef;
+}
+
+.adviceIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 18px;
+  background: white;
+  flex-shrink: 0;
+}
+
+.adviceContent {
+  flex: 1;
+}
+
+.adviceTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.adviceDesc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 占位符样式 */
+.advicePlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+.placeholderIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.placeholderText {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 无老人时的提示样式 */
+.noElderlyMessage {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin: 8px;
+  border: 1px dashed #dee2e6;
+}
+
+.noElderlyIcon {
+  font-size: 24px;
+  margin-right: 12px;
+  color: #6c757d;
+}
+
+.noElderlyText {
+  flex: 1;
+}
+
+.noElderlyTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 4px;
+}
+
+.noElderlyDesc {
+  font-size: 12px;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+/* 无健康数据时的提示样式 */
+.noHealthData {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  margin: 16px 0;
+  border: 2px dashed #dee2e6;
+}
+
+.noHealthDataIcon {
+  font-size: 48px;
+  margin-right: 16px;
+  color: #6c757d;
+}
+
+.noHealthDataText {
+  text-align: center;
+}
+
+.noHealthDataTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.noHealthDataDesc {
+  font-size: 14px;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .healthMetricsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .metricCard {
+    padding: 12px;
+  }
+
+  .metricValue {
+    font-size: 20px;
+  }
+
+  .elderlyAvatar {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 20px !important;
+  }
+
+  .elderlyName {
+    font-size: 16px;
+  }
+}

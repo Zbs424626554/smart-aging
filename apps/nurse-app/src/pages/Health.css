@@ -1,0 +1,355 @@
+.health-container {
+    padding: 16px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 头部信息 */
+.health-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.health-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff4d4f, #1890ff, #52c41a, #722ed1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.back-icon {
+    font-size: 18px;
+    color: #8c8c8c;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #f5f5f5;
+    flex-shrink: 0;
+}
+
+.back-icon:hover {
+    background-color: #e6f7ff;
+    color: #1890ff;
+    transform: scale(1.05);
+}
+
+.elderly-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    flex: 1;
+}
+
+.elderly-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+}
+
+.elderly-details h3 {
+    margin: 0;
+    color: #262626;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.4;
+}
+
+.elderly-details .ant-typography {
+    margin: 0;
+    color: #8c8c8c;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.header-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 关键指标概览 */
+.health-overview {
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background-color: white;
+    border-radius: 16px;
+    padding: 20px 16px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    border: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--metric-color, #1890ff);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card .ant-statistic-title {
+    font-size: 13px;
+    color: #8c8c8c;
+    margin-bottom: 12px;
+    font-weight: 500;
+    text-transform: none;
+}
+
+.metric-card .ant-statistic-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-direction: column;
+}
+
+.metric-card .ant-statistic-content-prefix {
+    font-size: 16px;
+    margin-bottom: 4px;
+    opacity: 0.8;
+}
+
+.metric-card .ant-statistic-content-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 2px;
+}
+
+.metric-card .ant-statistic-content-suffix {
+    font-size: 12px;
+    color: #8c8c8c;
+    font-weight: 500;
+}
+
+/* 图表区域 */
+.charts-section {
+    margin-bottom: 24px;
+}
+
+.chart-card {
+    background-color: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    border: none;
+    height: 100%;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.chart-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #1890ff, #52c41a);
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card>div {
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fafafa;
+    border: 1px solid #f0f0f0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .health-container {
+        padding: 12px;
+    }
+
+    .health-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+        padding: 16px;
+    }
+
+    .header-left {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .header-controls {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .charts-section .ant-col {
+        margin-bottom: 16px;
+    }
+
+    .metric-card {
+        padding: 16px;
+    }
+
+    .metric-card .ant-statistic-content-value {
+        font-size: 20px;
+    }
+
+    .chart-card {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .health-container {
+        padding: 8px;
+    }
+
+    .health-header {
+        padding: 12px;
+    }
+
+    .elderly-info {
+        gap: 12px;
+    }
+
+    .elderly-details h3 {
+        font-size: 16px;
+    }
+
+    .metric-card {
+        padding: 12px;
+    }
+
+    .metric-card .ant-statistic-content-value {
+        font-size: 18px;
+    }
+
+    .chart-card {
+        padding: 12px;
+    }
+
+    .chart-card>div {
+        height: 250px !important;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.health-overview,
+.charts-section {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.metric-card,
+.chart-card {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* 加载状态 */
+.chart-card>div:empty::before {
+    content: "加载中...";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #8c8c8c;
+    font-size: 14px;
+}
+
+/* 自定义滚动条 */
+.health-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.health-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.health-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.health-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 特定指标颜色 */
+.metric-card[data-metric="systolic"] {
+    --metric-color: #ff4d4f;
+}
+
+.metric-card[data-metric="diastolic"] {
+    --metric-color: #1890ff;
+}
+
+.metric-card[data-metric="glucose"] {
+    --metric-color: #52c41a;
+}
+
+.metric-card[data-metric="heartrate"] {
+    --metric-color: #722ed1;
+}

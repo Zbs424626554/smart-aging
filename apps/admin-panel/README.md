@@ -55,7 +55,7 @@ smart-aging/
 │   ├── elderly-app/        # 老人端 (React + Vite)
 │   ├── family-app/         # 家属端 (React + Vite)
 │   ├── nurse-app/          # 护工端 (React + Vite)
-│   └── admin-panel/        # 管理后台 (React + Vite)
+│   └── admin-panel/        # 管理后台 (Vue + Vite)
 ├── packages/               # 共享包（组件、服务、页面等）
 ├── server/                 # 后端服务 (Node.js + Express)
 ├── docs/                   # 项目文档
@@ -83,7 +83,7 @@ npm run install:all
 
 ```bash
 # 启动后端服务
-npm run dev:server
+npm run start:server
 # 启动前端应用（分别启动）
 npm run dev:elderly    # 老人端 http://localhost:5173
 npm run dev:family     # 家属端 http://localhost:5174
@@ -96,9 +96,9 @@ npm run dev:admin      # 管理后台 http://localhost:5176
 | 应用     | 端口 | 访问地址              |
 | -------- | ---- | --------------------- |
 | 后端服务 | 3001 | http://localhost:3001 |
-| 老人端   | 5173 | http://localhost:5173 |
-| 家属端   | 5174 | http://localhost:5174 |
-| 护工端   | 5175 | http://localhost:5175 |
+| 老人端   | 5174 | http://localhost:5174 |
+| 家属端   | 5175 | http://localhost:5175 |
+| 护工端   | 5173 | http://localhost:5173 |
 | 管理后台 | 5176 | http://localhost:5176 |
 
 ## 🎨 主要功能特性

@@ -1,0 +1,323 @@
+.paymentPage {
+  background: #f5f7fb;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #0b6cff;
+  color: #fff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.content {
+  padding: 20px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.orderInfo {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
+}
+
+.orderNo {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ef4444;
+  margin-bottom: 8px;
+}
+
+.subject {
+  font-size: 16px;
+  color: #1f2a37;
+}
+
+.paymentMethod {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
+}
+
+.methodTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2a37;
+  margin-bottom: 16px;
+}
+
+.methodCard {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 2px solid #0b6cff;
+  border-radius: 8px;
+  background: #f8faff;
+}
+
+.methodIcon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+
+.methodInfo {
+  flex: 1;
+}
+
+.methodName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2a37;
+  margin-bottom: 4px;
+}
+
+.methodDesc {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.methodSelected {
+  color: #0b6cff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.countdown {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
+}
+
+.countdownText {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.countdownTime {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ef4444;
+  font-family: monospace;
+}
+
+.payButton {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(135deg, #0b6cff, #36d1dc);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(11, 108, 255, 0.3);
+}
+
+.payButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.resultContainer {
+  background: #fff;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
+}
+
+.successIcon,
+.failedIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.resultTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2a37;
+  margin-bottom: 12px;
+}
+
+.resultDesc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.autoRedirect {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.retryButton,
+.backButton {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.retryButton {
+  background: #0b6cff;
+  color: #fff;
+}
+
+.retryButton:hover {
+  background: #005ce6;
+}
+
+.backButton {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.backButton:hover {
+  background: #e5e7eb;
+}
+
+.qrCodeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.qrCodeTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2a37;
+  margin-bottom: 8px;
+}
+
+.qrCode {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+}
+
+.qrCodeDesc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  text-align: center;
+  max-width: 280px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .paymentPage {
+    padding: 0;
+    margin: 0;
+  }
+
+  .content {
+    padding: 16px 12px;
+  }
+
+  .orderInfo,
+  .paymentMethod,
+  .countdown,
+  .resultContainer {
+    margin-bottom: 16px;
+    padding: 16px;
+  }
+
+  .amount {
+    font-size: 28px;
+  }
+
+  .qrCode {
+    width: 180px;
+    height: 180px;
+  }
+
+  .qrCodeDesc {
+    max-width: 100%;
+    padding: 0 8px;
+  }
+}
+
+/* 小屏幕设备适配 */
+@media (max-width: 480px) {
+  .content {
+    padding: 12px 8px;
+  }
+
+  .orderInfo,
+  .paymentMethod,
+  .countdown,
+  .resultContainer {
+    padding: 12px;
+  }
+
+  .amount {
+    font-size: 24px;
+  }
+
+  .qrCode {
+    width: 160px;
+    height: 160px;
+  }
+}

@@ -1,0 +1,224 @@
+.healthReport {
+  padding: 16px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.loadingText {
+  font-size: 16px;
+  color: #666;
+}
+
+.emptyContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.overviewCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.elderlyName {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.statusOverview {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.statusItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusLabel {
+  font-size: 12px;
+  color: #666;
+}
+
+.trendInfo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trendText {
+  font-size: 12px;
+  color: #333;
+  font-weight: 500;
+}
+
+.trendCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.trendChart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trendItem {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.trendDate {
+  font-size: 12px;
+  color: #666;
+  min-width: 60px;
+  text-align: center;
+}
+
+.trendMetrics {
+  flex: 1;
+  margin: 0 12px;
+}
+
+.metricRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.metricRow:last-child {
+  margin-bottom: 0;
+}
+
+.metricLabel {
+  font-size: 12px;
+  color: #666;
+}
+
+.metricValue {
+  font-size: 12px;
+  color: #333;
+  font-weight: 500;
+}
+
+.statusTag {
+  min-width: 40px;
+  text-align: center;
+}
+
+.recommendationsCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recommendationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recommendationItem {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.recommendationNumber {
+  width: 24px;
+  height: 24px;
+  background-color: #0077C2;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.recommendationText {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.actionBtn {
+  flex: 1;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .healthReport {
+    padding: 12px;
+  }
+
+  .statusOverview {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .trendItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .trendDate {
+    min-width: auto;
+    text-align: left;
+  }
+
+  .trendMetrics {
+    margin: 0;
+    width: 100%;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,421 @@
+/* 页面容器 */
+.elderly {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 页面标题 */
+.pageHeader {
+  background-color: #0077C2;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.backButton {
+  position: absolute;
+  left: 20px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  flex: 1;
+}
+
+/* 搜索栏 */
+.searchContainer {
+  margin-bottom: 20px;
+  padding: 0 16px;
+}
+
+.searchBar {
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 加载状态 */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.loadingText {
+  color: #666;
+  font-size: 16px;
+}
+
+/* 空状态 */
+.emptyContainer {
+  padding: 40px 20px;
+}
+
+/* 老人列表 */
+.elderlyList {
+  padding: 0 16px;
+}
+
+.elderlyCard {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.elderlyCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* 老人头部信息 */
+.elderlyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.elderlyInfo {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.elderlyAvatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-right: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.elderlyDetails {
+  flex: 1;
+}
+
+.elderlyName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.elderlyBasic {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.elderlyActions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 健康信息 */
+.elderlyHealth {
+  margin-bottom: 16px;
+}
+
+.healthStatus {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.statusLabel {
+  font-size: 14px;
+  color: #666;
+  margin-right: 8px;
+}
+
+.healthMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.metricItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metricLabel {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.metricValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 底部操作按钮 */
+.elderlyActionsBottom {
+  display: flex;
+  gap: 12px;
+}
+
+.detailBtn {
+  flex: 1;
+  border-radius: 8px;
+  height: 36px;
+  font-size: 14px;
+}
+
+.reportBtn {
+  flex: 1;
+  border-radius: 8px;
+  height: 36px;
+  font-size: 14px;
+}
+
+/* 添加按钮 */
+.addButton {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 4px 20px rgba(0, 123, 194, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.addButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(0, 123, 194, 0.4);
+}
+
+/* 绑定老人模态框样式 */
+.bindModalContent {
+  padding: 8px 0;
+}
+
+.availableElderlyHint {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.hintTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.availableElderlyList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.availableElderlyItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.elderlyName {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.elderlyUsername {
+  font-size: 12px;
+  color: #666;
+  font-family: monospace;
+}
+
+.bindInstructions {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-top: 16px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+/* 无可用老人时的提示样式 */
+.noAvailableElderly {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.noElderlyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.noElderlyTitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.noElderlyDesc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.noElderlySuggestions {
+  text-align: left;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.suggestionItem {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.suggestionItem:last-child {
+  margin-bottom: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .pageHeader {
+    padding: 12px 16px;
+  }
+
+  .backButton {
+    left: 16px;
+    font-size: 18px;
+  }
+
+  .pageTitle {
+    font-size: 18px;
+  }
+
+  .elderlyCard {
+    padding: 16px;
+  }
+
+  .elderlyAvatar {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .elderlyName {
+    font-size: 16px;
+  }
+
+  .elderlyBasic {
+    font-size: 13px;
+  }
+
+  .healthMetrics {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .metricValue {
+    font-size: 14px;
+  }
+
+  .addButton {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+}
+
+.addButtonContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.addButtonHint {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  padding: 4px 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.testContainer {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.testButton {
+  font-size: 12px;
+  height: 36px;
+  border-radius: 18px;
+}

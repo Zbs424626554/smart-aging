@@ -1,0 +1,197 @@
+.profile-container {
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Status Bar */
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #000;
+    color: white;
+    font-size: 12px;
+    height: 44px;
+}
+
+.status-left {
+    font-weight: 500;
+}
+
+.status-center {
+    font-weight: 600;
+}
+
+.status-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.wifi-icon,
+.battery-icon {
+    font-size: 14px;
+}
+
+.battery {
+    font-size: 12px;
+    margin: 0 4px;
+}
+
+/* Navigation Bar */
+.nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: white;
+    border-bottom: 1px solid #f0f0f0;
+    height: 56px;
+}
+
+.nav-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #000;
+}
+
+.nav-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.nav-actions .ant-btn {
+    padding: 4px;
+    min-width: auto;
+}
+
+/* Profile Header */
+.profile-header {
+    position: relative;
+    background: linear-gradient(135deg, #f4d8b1 0%, #f9e7c3 100%);
+    padding: 32px 16px 24px;
+    text-align: center;
+    color: white;
+}
+
+.profile-edit {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+}
+
+.profile-edit .ant-btn {
+    color: white;
+    border: none;
+    background: transparent;
+}
+
+.profile-avatar {
+    margin-bottom: 16px;
+}
+
+.profile-avatar .ant-avatar {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-info h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.profile-info .ant-typography {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+/* Menu Container */
+.menu-container {
+    background-color: white;
+    margin-top: 16px;
+    border-radius: 12px;
+    margin: 16px;
+    overflow: hidden;
+}
+
+.menu-item {
+    padding: 0 !important;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item-content {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.menu-item-content:hover {
+    background-color: #f8f9fa;
+}
+
+.menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    font-size: 20px;
+}
+
+.menu-text {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menu-title {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+.menu-count {
+    font-size: 14px;
+    color: #999;
+}
+
+.menu-arrow {
+    font-size: 18px;
+    color: #ccc;
+    font-weight: 300;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .profile-header {
+        padding: 24px 16px 20px;
+    }
+
+    .menu-container {
+        margin: 12px;
+    }
+
+    .menu-item-content {
+        padding: 14px 16px;
+    }
+}

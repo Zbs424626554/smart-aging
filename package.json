@@ -1,0 +1,46 @@
+{
+  "name": "smart-aging",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "server",
+    "apps/*",
+    "packages"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "dev:server": "cd server && ts-node-dev src/index.ts",
+    "dev:elderly": "cd apps/elderly-app && npm run dev",
+    "dev:family": "cd apps/family-app && npm run dev",
+    "dev:nurse": "cd apps/nurse-app && npm run dev",
+    "dev:admin": "cd apps/admin-panel && npm run dev",
+    "lint": "eslint . --ext .ts,.tsx,.vue --fix",
+    "prepare": "husky install"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "eslint": "^9.32.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2",
+    "stylelint": "^16.23.0",
+    "stylelint-config-standard": "^39.0.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,scss,less}": [
+      "stylelint --fix"
+    ]
+  },
+  "dependencies": {
+    "emoji-picker-react": "^4.13.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

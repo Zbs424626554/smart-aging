@@ -1,0 +1,48 @@
+{
+  "name": "@smart-aging/packages",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": {
+      "import": "./index.ts",
+      "types": "./index.ts"
+    },
+    "./utils": {
+      "import": "./utils/request.ts",
+      "types": "./utils/request.ts"
+    },
+    "./services": {
+      "import": "./services/auth.service.ts",
+      "types": "./services/auth.service.ts"
+    },
+    "./components": {
+      "import": "./components/PrivateRoute.tsx",
+      "types": "./components/PrivateRoute.tsx"
+    },
+    "./pages/auth/Login": {
+      "import": "./pages/auth/Login.tsx",
+      "types": "./pages/auth/Login.tsx"
+    },
+    "./pages/auth/Register": {
+      "import": "./pages/auth/Register.tsx",
+      "types": "./pages/auth/Register.tsx"
+    }
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.5.1",
+    "antd": "^5.20.1",
+    "antd-mobile": "^5.39.0",
+    "antd-mobile-icons": "^0.3.0",
+    "axios": "^1.11.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "typescript": "~5.8.3"
+  }
+}

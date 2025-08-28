@@ -1,0 +1,163 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import styles from './Home.module.css';
+
+
+const Home: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleFunctionClick = (type: string) => {
+    // 功能点击处理
+  };
+
+  const handleQuickAction = (action: string) => {
+    // 根据操作类型进行导航
+    switch (action) {
+      case 'elderly-management':
+        navigate('/elderly');
+        break;
+      case 'health-data':
+        navigate('/home/health');
+        break;
+      case 'nurse-service':
+        navigate('/home/nurses');
+        break;
+      case 'order-management':
+        navigate('/orders');
+        break;
+      case 'health-warning':
+        navigate('/warnings');
+        break;
+      case 'add-elderly':
+        navigate('/elderly');
+        break;
+      case 'emergency-contact':
+        // 可以导航到紧急联系页面或显示联系方式
+        break;
+      case 'emergency-call':
+        // 紧急呼叫功能
+        break;
+      case 'health-monitor':
+        navigate('/home/health');
+        break;
+    }
+  };
+
+  const quickActions = [
+    {
+      icon: <i className="fas fa-users"></i>,
+      title: '老人管理',
+      subtitle: '管理老人信息',
+      action: 'elderly-management'
+    },
+    {
+      icon: <i className="fas fa-heartbeat"></i>,
+      title: '健康数据',
+      subtitle: '查看健康状态',
+      action: 'health-data'
+    },
+    {
+      icon: <i className="fas fa-user-nurse"></i>,
+      title: '护工服务',
+      subtitle: '预约护工服务',
+      action: 'nurse-service'
+    },
+    {
+      icon: <i className="fas fa-clipboard-list"></i>,
+      title: '订单管理',
+      subtitle: '查看服务订单',
+      action: 'order-management'
+    },
+  ];
+
+  return (
+    <div>
+      {/* 欢迎卡片 */}
+      <div className={styles.welcomeCard}>
+        <div className={styles.welcomeContent}>
+          <div className={styles.welcomeText}>
+            <h2>早上好, 张女士</h2>
+            <p>今天有2位老人的健康数据需要关注</p>
+          </div>
+          <div className={styles.welcomeAvatar}>
+            <div className={styles.avatarCircle}>张</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 功能网格 */}
+      <div className={styles.functionGrid}>
+        {quickActions.map((action, index) => (
+          <div key={index} className={styles.functionCard} onClick={() => handleQuickAction(action.action)}>
+            <div className={styles.functionIcon}>
+              {action.icon}
+            </div>
+            <div className={styles.functionTitle}>{action.title}</div>
+            <div className={styles.functionSubtitle}>{action.subtitle}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 快捷操作 */}
+      <div className={styles['quick-actions']}>
+        <div className={styles['quick-actions-header']}>
+          <h3>快捷操作</h3>
+        </div>
+        <div className={styles['quick-actions-list']}>
+          <div className={styles['action-item']} onClick={() => handleQuickAction('add-elderly')}>
+            <div className={styles['action-icon']} style={{ background: '#667eea' }}>
+              <i className="fas fa-plus"></i>
+            </div>
+            <div className={styles['action-content']}>
+              <div className={styles['action-title']}>添加老人</div>
+              <div className={styles['action-subtitle']}>绑定新的老人信息</div>
+            </div>
+            <div className={styles['action-arrow']}>›</div>
+          </div>
+          <div className={styles['action-item']} onClick={() => handleQuickAction('health-warning')}>
+            <div className={styles['action-icon']} style={{ background: '#ff6b6b' }}>
+              <i className="fas fa-exclamation-triangle"></i>
+            </div>
+            <div className={styles['action-content']}>
+              <div className={styles['action-title']}>健康预警</div>
+              <div className={styles['action-subtitle']}>查看异常提醒</div>
+            </div>
+            <div className={styles['action-arrow']}>›</div>
+          </div>
+          <div className={styles['action-item']} onClick={() => handleQuickAction('emergency-contact')}>
+            <div className={styles['action-icon']} style={{ background: '#4ecdc4' }}>
+              <i className="fas fa-phone"></i>
+            </div>
+            <div className={styles['action-content']}>
+              <div className={styles['action-title']}>紧急联系</div>
+              <div className={styles['action-subtitle']}>一键联系护工</div>
+            </div>
+            <div className={styles['action-arrow']}>›</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 健康提醒 */}
+      <div className={styles['health-reminder']}>
+        <div className={styles['reminder-header']}>
+          <h3>今日健康提醒</h3>
+          <div className={styles['reminder-count']}>2</div>
+        </div>
+        <div className={styles['reminder-list']}>
+          <div className={styles['reminder-item']}>
+            <div className={styles['reminder-icon']} style={{ color: '#ff6b6b' }}>
+              <i className="fas fa-heartbeat"></i>
+            </div>
+            <div className={styles['reminder-content']}>
+              <div className={styles['reminder-title']}>张爷爷血压偏高</div>
+              <div className={styles['reminder-desc']}>建议及时关注血压变化</div>
+            </div>
+            <div className={styles['reminder-time']}>10分钟前</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Home;

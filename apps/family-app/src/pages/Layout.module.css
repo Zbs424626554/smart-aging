@@ -1,0 +1,58 @@
+/* Layout.module.css - 移动端样式 */
+:root {
+  --primary-100: #0077C2;
+  --primary-200: #59a5f5;
+  --text-100: #333333;
+  --text-200: #5c5c5c;
+  --bg-200: #f5f5f5;
+}
+
+
+
+.wrap {
+  background-color: #f5f5f5;
+  height: 100vh;
+  /* 单一滚动容器，避免嵌套滚动 */
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 16px;
+  padding-bottom: 70px;
+  /* 为固定底部Tab预留空间 */
+}
+
+/* 底部标签栏 */
+.tab-bar-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: white;
+  border-top: 1px solid #e5e5e5;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.tab-bar {
+  height: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 12px;
+}
+
+.tab-item.active {
+  color: #0077C2;
+}
+
+.tab-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+.tab-title {
+  line-height: 1;
+  font-size: 10px;
+  text-align: center;
+}

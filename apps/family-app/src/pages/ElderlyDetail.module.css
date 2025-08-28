@@ -1,0 +1,292 @@
+.elderlyDetail {
+  padding: 16px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.loadingText {
+  font-size: 16px;
+  color: #666;
+}
+
+.emptyContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.basicInfoCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.avatarSection {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  margin-right: 16px;
+  border-radius: 50%;
+  border: 3px solid #0077C2;
+}
+
+.nameSection {
+  flex: 1;
+}
+
+.name {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.username {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.infoIcon {
+  font-size: 20px;
+  color: #0077C2;
+  margin-right: 8px;
+}
+
+.infoLabel {
+  font-size: 14px;
+  color: #666;
+  margin-right: 8px;
+}
+
+.infoValue {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.healthCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.healthStatus {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.statusLabel {
+  font-size: 14px;
+  color: #666;
+  margin-right: 8px;
+}
+
+.lastUpdate {
+  font-size: 12px;
+  color: #999;
+}
+
+.metricsCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.metricItem {
+  text-align: center;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.metricLabel {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.metricValue {
+  font-size: 24px;
+  font-weight: bold;
+  color: #0077C2;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.metricUnit {
+  font-size: 10px;
+  color: #999;
+  display: block;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.actionBtn {
+  flex: 1;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .elderlyDetail {
+    padding: 12px;
+  }
+
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+  }
+}
+
+/* 新增病例信息样式 */
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.allergyTag {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.medicationList,
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.medicationItem,
+.historyItem {
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #0077C2;
+}
+
+.medicationName,
+.historyName {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.emergencyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emergencyItem {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.emergencyItem:last-child {
+  border-bottom: none;
+}
+
+.emergencyLabel {
+  font-size: 14px;
+  color: #666;
+  min-width: 60px;
+}
+
+.emergencyValue {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.eventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eventItem {
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #0077C2;
+}
+
+.eventHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.eventDate {
+  font-size: 12px;
+  color: #666;
+}
+
+.eventDescription {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
