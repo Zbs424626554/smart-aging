@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Modal, Form, Input, Avatar, Tag, SearchBar, Toast, Empty } from 'antd-mobile';
+import { Card, Button, Modal, Form, Input, Avatar, Tag, SearchBar, Toast, Empty,Dialog } from 'antd-mobile';
 import { AddOutline, UserOutline, LeftOutline } from 'antd-mobile-icons';
 import { useNavigate } from 'react-router-dom';
 import styles from './Elderly.module.css';
@@ -142,8 +142,16 @@ const Elderly: React.FC = () => {
   // 解绑老人
   const handleUnbindElderly = async (id: string, name: string) => {
     // 显示确认对话框
-    const confirmed = window.confirm(`确定要解绑老人 ${name} 吗？解绑后该老人将不再出现在您的列表中。`);
-    if (!confirmed) {
+    const result=await Dialog.confirm({
+      content:`确定要解绑老人 ${name} 吗？解绑后该老人将不再出现在您的列表中。`,
+      confirmText:'确认',
+      cancelText:'取消'
+    })
+    // const confirmed = window.confirm(`确定要解绑老人 ${name} 吗？解绑后该老人将不再出现在您的列表中。`);
+    // if (!confirmed) {
+    //   return;
+    // }
+    if(!result){
       return;
     }
 
@@ -215,7 +223,8 @@ const Elderly: React.FC = () => {
                   <div className={styles.elderlyDetails}>
                     <div className={styles.elderlyName}>{elderly.name}</div>
                     <div className={styles.elderlyBasic}>
-                      {elderly.phone} | 绑定{elderly.boundYears || 1}年
+                      {/* {elderly.phone} | 绑定{elderly.boundYears || 1}年 */}
+                      手机号:{elderly.phone}
                     </div>
                   </div>
                 </div>
@@ -289,7 +298,7 @@ const Elderly: React.FC = () => {
       </div>
 
       {/* 测试按钮 */}
-      <div className={styles.testContainer}>
+      {/* <div className={styles.testContainer}>
         <Button
           className={styles.testButton}
           color="default"
@@ -314,7 +323,7 @@ const Elderly: React.FC = () => {
         >
           测试API连接
         </Button>
-      </div>
+      </div> */}
 
       {/* 添加老人模态框 */}
       <Modal
