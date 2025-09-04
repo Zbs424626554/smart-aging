@@ -1,34 +1,39 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IRolePermission extends Document {
-  role: 'admin' | 'cs' | 'auditor' | 'finance';
+  role: "admin" | "cs" | "auditor" | "finance";
   permissions: {
-    module: 'user' | 'order' | 'payment' | 'nurse' | 'content';
-    actions: ('create' | 'read' | 'update' | 'delete' | 'export')[];
+    module: "user" | "order" | "payment" | "nurse" | "content";
+    actions: ("create" | "read" | "update" | "delete" | "export")[];
   }[];
 }
 
-const rolePermissionSchema = new Schema({
-  role: {
-    type: String,
-    enum: ['admin', 'cs', 'auditor', 'finance'],
-    required: true
-  },
-  permissions: [{
-    module: {
+const rolePermissionSchema = new Schema(
+  {
+    role: {
       type: String,
-      enum: ['user', 'order', 'payment', 'nurse', 'content'],
-      required: true
+      enum: ["admin", "cs", "auditor", "finance"],
+      required: true,
     },
-    actions: {
-      type: [String],
-      enum: ['create', 'read', 'update', 'delete', 'export']
-    }
-  }]
-}, {
-  timestamps: true,
-  collection: 'role_permissions'
-});
+    permissions: [
+      {
+        module: {
+          type: String,
+          enum: ["user", "order", "payment", "nurse", "content"],
+          required: true,
+        },
+        actions: {
+          type: [String],
+          enum: ["create", "read", "update", "delete", "export"],
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+    collection: "role_permissions",
+  }
+);
 
 rolePermissionSchema.index({ role: 1 });
 
