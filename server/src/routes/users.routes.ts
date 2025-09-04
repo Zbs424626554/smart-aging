@@ -11,5 +11,6 @@ router.get('/elderly/:id', authenticateToken, UserController.getElderlyDetail);
 router.post('/bind-elderly', authenticateToken, UserController.bindElderly);
 router.delete('/unbind-elderly/:id', authenticateToken, UserController.unbindElderly);
 router.get('/test-all', authenticateToken, UserController.testGetAllUsers);
+router.post('/adduser',authenticateToken,UserController.addUser)
 
 export default router;

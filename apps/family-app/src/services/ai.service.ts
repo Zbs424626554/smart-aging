@@ -1,17 +1,60 @@
+import { message } from 'antd';
 import OpenAI from 'openai';
-
+type Role='system'|'user'|'assistant'
+export interface ChatMessage{
+  role:Role;
+  content:string
+}
 // 初始化OpenAI客户端（使用百川智能API）
 const createBaichuanClient = () => {
   return new OpenAI({
     apiKey: import.meta.env.VITE_DASHSCOPE_API_KEY,
     baseURL: "https://api.baichuan-ai.com/v1",
-    dangerouslyAllowBrowser: true // 允许在浏览器中使用
+    dangerouslyAllowBrowser: true // 允许在浏览器中使用跳过检查
   });
 };
+const client = createBaichuanClient();
+
+
+//SDK接口调用
+export const streamChat=async(messages:ChatMessage[],
+  onChunk:(chunk:string)=>void,
+  model:string='Baichuan2-Turbo')=>{
+    if (!Array.isArray(messages) || messages.length == 0) {
+      throw new Error("messages 必须是至少一条消息的数组");
+    }
+   
+    const systemMessage:ChatMessage = {
+      role: "system",
+      content: "请用Markdown格式回复。"
+    };
+  const completion=await client.chat.completions.create(
+    {
+      model,
+      messages: [systemMessage, ...messages],
+      temperature:0.7,
+      stream:true,
+      max_tokens:1000
+    }
+  )
+  let fullText=''
+  console.log(messages);
+  
+  for await(const chunk of completion){
+    console.log(chunk.choices[0].delta.content);
+    const delta = chunk.choices[0].delta.content;
+    if (delta) {
+      fullText += delta;
+      onChunk(delta);
+    }
+  }
+  return fullText
+}
+
+
 
 // 调用百川智能模型
-const callBaichuan = async (messages: any[], model = "Baichuan2-Turbo") => {
-  const client = createBaichuanClient();
+const callBaichuan = async (messages: any[], model:string = "Baichuan2-Turbo") => {
 
   try {
     const completion = await client.chat.completions.create({
@@ -20,7 +63,6 @@ const callBaichuan = async (messages: any[], model = "Baichuan2-Turbo") => {
       temperature: 0.7,
       max_tokens: 1000
     });
-
     return completion.choices[0].message.content;
   } catch (error: any) {
     console.error("API调用失败:", error);
@@ -40,7 +82,7 @@ export const askQuestion = async (question: string, model = "Baichuan2-Turbo") =
 export const generateHealthAdvice = async (healthData: any, elderlyName: string) => {
   console.log('🔍 开始生成AI健康建议...');
   console.log('📊 健康数据:', healthData);
-  console.log('👴 老人姓名:', elderlyName);
+  console.log('👴 老人姓名:', elderlyName,);
 
   // 检查API密钥是否配置
   if (!import.meta.env.VITE_DASHSCOPE_API_KEY) {
@@ -137,3 +179,4 @@ const getDefaultAdvice = () => {
     }
   ];
 };
+

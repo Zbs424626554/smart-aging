@@ -207,7 +207,7 @@ export class UserController {
         status: user.status,
         createdTime: user.createdTime
       }));
-
+      
       return res.json({
         code: 200,
         message: '获取成功',
@@ -560,5 +560,17 @@ export class UserController {
         data: null
       });
     }
+  }
+
+  // 添加用户
+  static async addUser(req:Request,res:Response){
+    // const {info}=req.body
+    console.log(req.body,444);
+    await User.create(req.body)
+    res.send({
+      code:200,
+      msg:'添加成功'
+    })
+    
   }
 }
