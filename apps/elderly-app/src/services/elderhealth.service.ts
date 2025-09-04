@@ -4,13 +4,21 @@ export interface ElderHealthArchiveDto {
   _id?: string;
   elderID: string;
   name: string;
+  gender?: string;
   age: number;
   phone: string;
   address?: string;
   emcontact: { username: string; phone: string; realname?: string };
   medicals: string[];
   allergies: string[];
-  useMedication?: { name: string; time: string }[];
+  // 兼容旧结构：{ name, time }
+  useMedication?: Array<{ name: string; time?: string; times?: string[] }>;
+  // 扩展：健康状态字段与时间
+  heartRate?: number;
+  bloodPressure?: string;
+  temperature?: number;
+  oxygenLevel?: number;
+  bloodSugar?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -21,6 +29,18 @@ export class ElderHealthService {
       "/elderhealth/me"
     );
     return data || null;
+  }
+
+  // newDevelop: 删除用药时间设置
+  static async deleteMedicationND(
+    name: string,
+    time?: string
+  ): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/medication/delete",
+      { name, time }
+    );
+    return data as ElderHealthArchiveDto;
   }
 
   static async getArchiveByElderId(
@@ -58,6 +78,22 @@ export class ElderHealthService {
     return data as ElderHealthArchiveDto;
   }
 
+  static async updateGender(gender: string): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/gender",
+      { gender }
+    );
+    return data as ElderHealthArchiveDto;
+  }
+
+  static async updateName(name: string): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/name",
+      { name }
+    );
+    return data as ElderHealthArchiveDto;
+  }
+
   static async addMedical(item: string): Promise<ElderHealthArchiveDto> {
     const { data } = await http.post<ElderHealthArchiveDto>(
       "/elderhealth/medicals",
@@ -76,11 +112,11 @@ export class ElderHealthService {
 
   static async addMedication(
     name: string,
-    time: string
+    payloadTimes: string[]
   ): Promise<ElderHealthArchiveDto> {
     const { data } = await http.post<ElderHealthArchiveDto>(
       "/elderhealth/medication",
-      { name, time }
+      { name, times: payloadTimes }
     );
     return data as ElderHealthArchiveDto;
   }

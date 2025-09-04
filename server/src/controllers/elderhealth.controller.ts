@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import { ElderHealthArchive } from '../models/elderhealth.model';
-import { User } from '../models/user.model';
+import { Request, Response } from "express";
+import { ElderHealthArchive } from "../models/elderhealth.model";
+import { User } from "../models/user.model";
 
 export class ElderHealthController {
   /**
@@ -12,46 +12,48 @@ export class ElderHealthController {
 
       // 验证老人ID是否存在
       const elderly = await User.findById(elderlyId);
-      if (!elderly || elderly.role !== 'elderly') {
+      if (!elderly || elderly.role !== "elderly") {
         return res.json({
           code: 404,
-          message: '老人不存在',
-          data: null
+          message: "老人不存在",
+          data: null,
         });
       }
 
       // 获取健康档案
-      const healthArchive = await ElderHealthArchive.findOne({ elderID: elderlyId });
+      const healthArchive = await ElderHealthArchive.findOne({
+        elderID: elderlyId,
+      });
 
       if (!healthArchive) {
         // 如果没有健康档案，返回默认值
         const defaultArchive = {
-          id: '',
+          id: "",
           elderID: elderlyId,
           name: elderly.realname || elderly.username,
           age: 0,
           phone: elderly.phone,
-          address: '',
+          address: "",
           emcontact: {
-            username: '',
-            phone: '',
-            realname: ''
+            username: "",
+            phone: "",
+            realname: "",
           },
           medicals: [],
           allergies: [],
-          useMedication: []
+          useMedication: [],
         };
 
         return res.json({
           code: 200,
-          message: '获取成功',
-          data: defaultArchive
+          message: "获取成功",
+          data: defaultArchive,
         });
       }
 
       return res.json({
         code: 200,
-        message: '获取成功',
+        message: "获取成功",
         data: {
           id: healthArchive._id,
           elderID: healthArchive.elderID,
@@ -62,15 +64,15 @@ export class ElderHealthController {
           emcontact: healthArchive.emcontact,
           medicals: healthArchive.medicals,
           allergies: healthArchive.allergies,
-          useMedication: healthArchive.useMedication
-        }
+          useMedication: healthArchive.useMedication,
+        },
       });
     } catch (error) {
-      console.error('获取老人健康档案失败:', error);
+      console.error("获取老人健康档案失败:", error);
       return res.json({
         code: 500,
-        message: '获取老人健康档案失败',
-        data: null
+        message: "获取老人健康档案失败",
+        data: null,
       });
     }
   }
@@ -88,12 +90,12 @@ export class ElderHealthController {
 
       // 获取健康档案列表
       const healthArchives = await ElderHealthArchive.find()
-        .populate('elderID', 'username realname phone avatar')
+        .populate("elderID", "username realname phone avatar")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit));
 
-      const formattedArchives = healthArchives.map(archive => ({
+      const formattedArchives = healthArchives.map((archive) => ({
         id: archive._id,
         elderID: archive.elderID,
         name: archive.name,
@@ -103,25 +105,25 @@ export class ElderHealthController {
         emcontact: archive.emcontact,
         medicals: archive.medicals,
         allergies: archive.allergies,
-        useMedication: archive.useMedication
+        useMedication: archive.useMedication,
       }));
 
       return res.json({
         code: 200,
-        message: '获取成功',
+        message: "获取成功",
         data: {
           list: formattedArchives,
           total,
           page: Number(page),
-          limit: Number(limit)
-        }
+          limit: Number(limit),
+        },
       });
     } catch (error) {
-      console.error('获取老人健康档案列表失败:', error);
+      console.error("获取老人健康档案列表失败:", error);
       return res.json({
         code: 500,
-        message: '获取老人健康档案列表失败',
-        data: null
+        message: "获取老人健康档案列表失败",
+        data: null,
       });
     }
   }
@@ -131,15 +133,25 @@ export class ElderHealthController {
    */
   static async createOrUpdateElderHealthArchive(req: Request, res: Response) {
     try {
-      const { elderID, name, age, phone, address, emcontact, medicals, allergies, useMedication } = req.body;
+      const {
+        elderID,
+        name,
+        age,
+        phone,
+        address,
+        emcontact,
+        medicals,
+        allergies,
+        useMedication,
+      } = req.body;
 
       // 验证老人ID是否存在
       const elderly = await User.findById(elderID);
-      if (!elderly || elderly.role !== 'elderly') {
+      if (!elderly || elderly.role !== "elderly") {
         return res.json({
           code: 404,
-          message: '老人不存在',
-          data: null
+          message: "老人不存在",
+          data: null,
         });
       }
 
@@ -158,7 +170,7 @@ export class ElderHealthController {
             emcontact,
             medicals,
             allergies,
-            useMedication
+            useMedication,
           },
           { new: true, runValidators: true }
         );
@@ -166,8 +178,8 @@ export class ElderHealthController {
         if (!updatedArchive) {
           return res.json({
             code: 500,
-            message: '更新档案失败',
-            data: null
+            message: "更新档案失败",
+            data: null,
           });
         }
 
@@ -183,14 +195,14 @@ export class ElderHealthController {
           emcontact,
           medicals,
           allergies,
-          useMedication
+          useMedication,
         });
 
         if (!newArchive) {
           return res.json({
             code: 500,
-            message: '创建档案失败',
-            data: null
+            message: "创建档案失败",
+            data: null,
           });
         }
 
@@ -201,14 +213,14 @@ export class ElderHealthController {
       if (!healthArchive) {
         return res.json({
           code: 500,
-          message: '操作失败',
-          data: null
+          message: "操作失败",
+          data: null,
         });
       }
 
       return res.json({
         code: 200,
-        message: '操作成功',
+        message: "操作成功",
         data: {
           id: healthArchive._id,
           elderID: healthArchive.elderID,
@@ -219,15 +231,15 @@ export class ElderHealthController {
           emcontact: healthArchive.emcontact,
           medicals: healthArchive.medicals,
           allergies: healthArchive.allergies,
-          useMedication: healthArchive.useMedication
-        }
+          useMedication: healthArchive.useMedication,
+        },
       });
     } catch (error) {
-      console.error('创建或更新老人健康档案失败:', error);
+      console.error("创建或更新老人健康档案失败:", error);
       return res.json({
         code: 500,
-        message: '创建或更新老人健康档案失败',
-        data: null
+        message: "创建或更新老人健康档案失败",
+        data: null,
       });
     }
   }

@@ -31,20 +31,16 @@ const analyzeWithAI = async (input: EmergencyAnalysisInput): Promise<EmergencyAn
 语音转写内容：${input.transcript || '无语音内容'}
 位置信息：${input.location ? `经度${input.location.coordinates[0]}, 纬度${input.location.coordinates[1]}` : '无位置信息'}
 
-请按照以下JSON格式返回分析结果：
-{
-  "riskLevel": "low/medium/high",
-  "summary": "简要分析总结",
-  "detectedKeywords": ["关键词1", "关键词2"],
-  "recommendations": ["建议1", "建议2", "建议3"],
-  "needCallEmergency": true/false
-}
+请严格按照以下JSON格式返回分析结果，不要包含任何Markdown标记、代码块符号或其他格式字符：
+
+{"riskLevel":"low/medium/high","summary":"简要分析总结","detectedKeywords":["关键词1","关键词2"],"recommendations":["建议1","建议2","建议3"],"needCallEmergency":true/false}
 
 请确保：
 1. riskLevel根据紧急程度判断：low(轻微), medium(中等), high(严重)
 2. detectedKeywords提取语音中的关键信息
 3. recommendations提供具体的行动建议
 4. needCallEmergency根据风险等级判断是否需要立即拨打急救电话
+5. 返回格式必须是有效的JSON，不能包含任何Markdown标记或代码块符号
 `;
 
   try {
@@ -63,7 +59,29 @@ const analyzeWithAI = async (input: EmergencyAnalysisInput): Promise<EmergencyAn
     }
 
     try {
-      const analysis = JSON.parse(response);
+      // 清理响应内容，移除可能的Markdown标记
+      let cleanResponse = response.trim();
+
+      // 移除可能的代码块标记
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/^```json\s*/, '');
+      }
+      if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/^```\s*/, '');
+      }
+      if (cleanResponse.endsWith('```')) {
+        cleanResponse = cleanResponse.replace(/\s*```$/, '');
+      }
+
+      // 尝试找到JSON内容的开始和结束
+      const jsonStart = cleanResponse.indexOf('{');
+      const jsonEnd = cleanResponse.lastIndexOf('}');
+
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanResponse = cleanResponse.substring(jsonStart, jsonEnd + 1);
+      }
+
+      const analysis = JSON.parse(cleanResponse);
       return {
         riskLevel: analysis.riskLevel || 'medium',
         summary: analysis.summary || 'AI分析完成',

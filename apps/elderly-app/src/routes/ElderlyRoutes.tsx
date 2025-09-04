@@ -11,6 +11,8 @@ import Profile from "../pages/Profile";
 import Message from "../pages/Message";
 import Heath from "../pages/Health";
 import Chat from "../pages/Chat";
+import Community from "../pages/Community";
+import Publish from "../pages/Publish";
 
 // 根路由重定向组件
 const RootRedirect: React.FC = () => {
@@ -51,12 +53,14 @@ const ElderlyRoutes: React.FC = () => {
       >
         <Route index element={<Emergency />} />
         <Route path="call" element={<Emergency />} />
-        <Route path="orders" element={<Orders />} />
+        {/* <Route path="orders" element={<Orders />} /> */}
+        <Route path="community" element={<Community />} />
         <Route path="message" element={<Message />} />
         <Route path="mine" element={<Profile />} />
       </Route>
       <Route path="chat/:id" element={<Chat />} />
       <Route path="health" element={<Heath />} />
+      <Route path="publish" element={<Publish />} />
 
       {/* 404页面 */}
       <Route path="*" element={<Navigate to="/" replace />} />

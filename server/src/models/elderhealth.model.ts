@@ -4,6 +4,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IElderHealthArchive extends Document {
   elderID: mongoose.Types.ObjectId;
   name?: string;
+  gender?: string;
   age?: number;
   phone?: string;
   address?: string;
@@ -14,7 +15,8 @@ export interface IElderHealthArchive extends Document {
   };
   medicals?: string[];
   allergies?: string[];
-  useMedication?: Array<{ name: string; time: string }>;
+  // 兼容旧结构：time，新增结构：times[]
+  useMedication?: Array<{ name: string; time?: string; times?: string[] }>;
   heartRate?: number;
   bloodPressure?: string;
   temperature?: number;
@@ -31,6 +33,10 @@ const elderHealthArchiveSchema = new Schema(
     },
     name: {
       type: String,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "secret"],
     },
     age: {
       type: Number,
@@ -63,7 +69,10 @@ const elderHealthArchiveSchema = new Schema(
       type: [
         {
           name: { type: String, required: true },
-          time: { type: String, required: true },
+          // 旧字段，仅兼容
+          time: { type: String, required: false },
+          // 新字段：单个药品的多个时间
+          times: { type: [String], required: false },
           _id: false,
         },
       ],

@@ -1,26 +1,27 @@
 // server/src/index.ts
-import express from 'express';
-import http from 'http';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { connectDB } from './config/db';
-import authRoutes from './routes/auth.routes';
-import emergencyRoutes from './routes/emergency.routes';
-import userRoutes from './routes/users.routes';
-import healthRoutes from './routes/health.routes';
-import ordersRoutes from './routes/orders.routes';
-import approvesRoutes from './routes/approves.routes';
-import uploadRoutes from './routes/upload.routes';
-import paymentRoutes from './routes/payment.routes';
-import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import path from 'path';
-import { initSocket } from './config/socket';
+import express from "express";
+import http from "http";
+import cors from "cors";
+import dotenv from "dotenv";
+import { connectDB } from "./config/db";
+import authRoutes from "./routes/auth.routes";
+import emergencyRoutes from "./routes/emergency.routes";
+import userRoutes from "./routes/users.routes";
+import healthRoutes from "./routes/health.routes";
+import ordersRoutes from "./routes/orders.routes";
+import approvesRoutes from "./routes/approves.routes";
+import uploadRoutes from "./routes/upload.routes";
+import paymentRoutes from "./routes/payment.routes";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { initSocket } from "./config/socket";
 import { WebSocket, WebSocketServer } from "ws";
 import messageRoutes from "./routes/ZBS/message";
 import userRoutesZBS from "./routes/ZBS/users";
 import elderHealthRoutes from "./routes/ZBS/elderhealth";
 import elderOrderRoutes from "./routes/ZBS/elderorder";
+import newDevelopElderHealthRoutes from "./routes/newDevelop/elderhealth";
 
 dotenv.config();
 
@@ -29,49 +30,54 @@ const server = http.createServer(app);
 const io = initSocket(server);
 
 app.use(cookieParser());
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175',
-    'http://localhost:5176'
-  ],
-  credentials: true
-}));
-app.use(express.json({ limit: '50mb' }));
-app.use(morgan('dev'));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "http://localhost:5176",
+    ],
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: "50mb" }));
+app.use(morgan("dev"));
 
 // 禁用 ETag 并禁止缓存，避免接口返回 304 导致前端拿不到数据
-app.set('etag', false);
+app.set("etag", false);
 app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   next();
 });
 
 connectDB();
 
 // 静态文件服务
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // API路由
-app.use('/api/auth', authRoutes);
-app.use('/api/emergency', emergencyRoutes(io));
-app.use('/api/users', userRoutes);
-app.use('/api/health-records', healthRoutes);
-app.use('/api/elderhealth', elderHealthRoutes);
-app.use('/api/orders', ordersRoutes);
-app.use('/api/approves', approvesRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/payment', paymentRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/emergency", emergencyRoutes(io));
+app.use("/api/users", userRoutes);
+app.use("/api/health-records", healthRoutes);
+app.use("/api/elderhealth", elderHealthRoutes);
+app.use("/api/orders", ordersRoutes);
+app.use("/api/approves", approvesRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/payment", paymentRoutes);
 app.use("/api", messageRoutes);
 app.use("/api", userRoutesZBS);
 app.use("/api", elderHealthRoutes);
+app.use("/api", newDevelopElderHealthRoutes);
 app.use("/api/elderorder", elderOrderRoutes);
 
 // WebSocket服务器设置
-
 
 app.use("/api", messageRoutes);
 app.use("/api", userRoutes);
@@ -106,13 +112,13 @@ const heartbeatInterval = setInterval(() => {
     if (c.isAlive === false) {
       try {
         c.terminate();
-      } catch { }
+      } catch {}
       return;
     }
     c.isAlive = false;
     try {
       c.ping();
-    } catch { }
+    } catch {}
   });
 }, 30000);
 
