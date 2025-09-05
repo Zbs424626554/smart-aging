@@ -12,6 +12,7 @@ import ordersRoutes from './routes/orders.routes';
 import approvesRoutes from './routes/approves.routes';
 import uploadRoutes from './routes/upload.routes';
 import paymentRoutes from './routes/payment.routes';
+import serviceRoutes from './routes/service.routes'
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import path from 'path';
@@ -69,6 +70,7 @@ app.use("/api", messageRoutes);
 app.use("/api", userRoutesZBS);
 app.use("/api", elderHealthRoutes);
 app.use("/api/elderorder", elderOrderRoutes);
+app.use('/api/service',serviceRoutes)
 
 // WebSocket服务器设置
 

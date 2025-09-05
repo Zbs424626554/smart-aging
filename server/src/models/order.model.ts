@@ -1,131 +1,47 @@
 import mongoose, { Schema, Document } from "mongoose";
-// 订单
 
 export interface IOrder extends Document {
-  userId: mongoose.Types.ObjectId;
-  nurseId: mongoose.Types.ObjectId;
-  serviceType: mongoose.Types.ObjectId;
-  status:
-    | "pending"
-    | "accepted"
-    | "started"
-    | "completed"
-    | "confirmed"
-    | "canceled";
-  orderTime: Date;
-  elderlyId: mongoose.Types.ObjectId;
-  requirements: string;
-  startTime?: Date;
-  endTime?: Date;
-  duration: number;
-  price: number;
-  paymentStatus: "unpaid" | "paid" | "refunded";
-  address: {
-    formatted: string;
-    province: string;
-    city: string;
-    district: string;
-    location: {
-      type: "Point";
-      coordinates: [number, number];
-    };
-  };
-  remarks: string;
-  healthSnapshot?: {
-    bloodPressure?: string;
-    bloodSugar?: number;
-  };
+  userId: mongoose.Types.ObjectId;          // 家属用户ID
+  elderlyId: mongoose.Types.ObjectId;       // 老人ID
+  serviceId: mongoose.Types.ObjectId;       // 服务类型ID
+
+  status: "published" | "assigned" | "in_progress" | "completed"; // 状态
+
+  regionManager?: string;                   // 区域负责人姓名
+  nurseId?: mongoose.Types.ObjectId;        // 护工ID
+
+  scheduledStartTime: Date;                 // 订单预约开始时间
+  scheduledEndTime: Date;                   // 订单预约结束时间
+  actualStartTime?: Date;                   // 实际开始时间
+  actualEndTime?: Date;                     // 实际结束时间
+
+  price: string;                            // 服务价格（字符串）
+
+  address: string;                          // 地址信息
+
 }
 
-const orderSchema = new Schema(
+const OrderSchema: Schema<IOrder> = new Schema(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    nurseId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    serviceType: {
-      type: Schema.Types.ObjectId,
-      ref: "ServiceType",
-      required: true,
-    },
+    userId: { type: Schema.Types.ObjectId, ref: "User" },
+    elderlyId: { type: Schema.Types.ObjectId, ref: "User" },
+    serviceId: { type: Schema.Types.ObjectId, ref: "Service" },
+
     status: {
       type: String,
-      enum: [
-        "pending",
-        "accepted",
-        "started",
-        "completed",
-        "confirmed",
-        "canceled",
-      ],
-      default: "pending",
+      enum: ["published", "assigned", "in_progress", "completed"],
+      default: "published",
     },
-    orderTime: {
-      type: Date,
-      default: Date.now,
-    },
-    elderlyId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    startTime: {
-      type: Date,
-    },
-    endTime: {
-      type: Date,
-    },
-    duration: {
-      type: Number,
-      required: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    paymentStatus: {
-      type: String,
-      enum: ["unpaid", "paid", "refunded"],
-      default: "unpaid",
-    },
-    address: {
-      formatted: {
-        type: String,
-      },
-      province: {
-        type: String,
-      },
-      city: {
-        type: String,
-      },
-      district: {
-        type: String,
-      },
-      location: {
-        type: {
-          type: String,
-          default: "Point",
-        },
-        coordinates: {
-          type: [Number],
-        },
-      },
-    },
-    requirements: {
-      type: String,
-    },
-    healthSnapshot: {
-      bloodPressure: {
-        type: String,
-      },
-      bloodSugar: {
-        type: Number,
-      },
-    },
+
+    regionManager: { type: String, default: null },
+    nurseId: { type: Schema.Types.ObjectId, ref: "User", default: null },
+
+    scheduledStartTime: { type: Date },
+    scheduledEndTime: { type: Date },
+    actualStartTime: { type: Date, default: null },
+    actualEndTime: { type: Date, default: null },
+    price: { type: String },
+    address: { type: String },
   },
   {
     timestamps: true,
@@ -133,10 +49,9 @@ const orderSchema = new Schema(
   }
 );
 
-orderSchema.index({ userId: 1 });
-orderSchema.index({ nurseId: 1 });
-orderSchema.index({ status: 1 });
-orderSchema.index({ orderTime: -1 });
-orderSchema.index({ "address.location": "2dsphere" });
+OrderSchema.index({ userId: 1 });
+OrderSchema.index({ elderlyId: 1 });
+OrderSchema.index({ status: 1 });
+OrderSchema.index({ scheduledStartTime: -1 });
 
-export const Order = mongoose.model<IOrder>("Order", orderSchema);
+export const Order = mongoose.model<IOrder>("Order", OrderSchema);
