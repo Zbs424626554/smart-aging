@@ -17,14 +17,15 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   redirectTo = '/login'
 }) => {
   const location = useLocation();
-  // 使用本地token进行同步校验，避免异步Promise误判
+  // 使用本地token或userRole进行同步校验，避免跨端首落地需二次登录
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const isLoggedIn = !!token;
+  const role = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+  const isLoggedIn = !!(token || role);
   const currentRole = AuthService.getCurrentRole();
 
   // 如果未登录，重定向到登录页
   if (!isLoggedIn) {
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
+    return <Navigate to={"/"} state={{ from: location }} replace />;
   }
 
   // 如果需要特定角色权限
@@ -35,8 +36,8 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
     if (!hasPermission) {
       // 根据角色重定向到对应的应用
       const roleRedirectMap: Record<UserRole, string> = {
-        elderly: 'http://localhost:5174',
-        family: 'http://localhost:5173',
+        elderly: 'http://localhost:5173',
+        family: 'http://localhost:5174',
         nurse: 'http://localhost:5175',
         admin: 'http://localhost:5176'
       };

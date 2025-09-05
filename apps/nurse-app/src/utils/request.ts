@@ -37,6 +37,7 @@ const request: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // 请求拦截器
@@ -47,13 +48,13 @@ request.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // 添加用户角色信息
     const userRole = localStorage.getItem('userRole');
     if (userRole) {
       config.headers['X-User-Role'] = userRole;
     }
-    
+
     return config;
   },
   (error) => {
@@ -65,13 +66,15 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     const { data } = response;
-    
+
     // 处理业务错误
     if (data.code !== 200) {
       // 处理特定错误码
       switch (data.code) {
         case 401:
-          // 未授权，清除token并跳转到登录页
+          if (response.config?.url && response.config.url.includes('/auth/profile')) {
+            return Promise.reject(new Error('Unauthorized'));
+          }
           localStorage.removeItem('token');
           localStorage.removeItem('userRole');
           localStorage.removeItem('userInfo');
@@ -92,14 +95,14 @@ request.interceptors.response.use(
       }
       return Promise.reject(new Error(data.message || '请求失败'));
     }
-    
+
     return data;
   },
   (error) => {
     // 处理网络错误
     if (error.response) {
       const { status, data } = error.response;
-      
+
       switch (status) {
         case 401:
           message.error('登录已过期，请重新登录');
@@ -125,7 +128,7 @@ request.interceptors.response.use(
     } else {
       message.error('请求配置错误');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -135,19 +138,19 @@ export const http = {
   get: <T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.get(url, config);
   },
-  
+
   post: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.post(url, data, config);
   },
-  
+
   put: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.put(url, data, config);
   },
-  
+
   patch: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.patch(url, data, config);
   },
-  
+
   delete: <T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.delete(url, config);
   },

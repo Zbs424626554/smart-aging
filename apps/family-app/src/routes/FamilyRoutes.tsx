@@ -26,7 +26,48 @@ const RootRedirect: React.FC = () => {
   const currentRole = AuthService.getCurrentRole();
 
   useEffect(() => {
-    AuthService.isLoggedIn().then(setIsLoggedIn);
+    const checkLogin = async () => {
+      // 1) 读取 URL 中的 ssoToken 并写入本地
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        const ssoToken = url.searchParams.get('ssoToken');
+        if (ssoToken) {
+          localStorage.setItem('token', ssoToken);
+          url.searchParams.delete('ssoToken');
+          window.history.replaceState(null, '', url.toString());
+        }
+      }
+
+      // 2) 若本地已有 token，优先从 token 解出 role，确保首落地即可拿到正确角色
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (token) {
+        try {
+          const payloadBase64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+          if (payloadBase64) {
+            const payload = JSON.parse(atob(payloadBase64));
+            if (payload?.role) {
+              localStorage.setItem('userRole', payload.role);
+            }
+          }
+        } catch { }
+        // 视为已登录，但继续请求 profile 以刷新 userInfo，避免沿用旧数据
+        setIsLoggedIn(true);
+      }
+      try {
+        const res: any = await AuthService.getProfile();
+        if ((res?.code === 200) || (res?.data && (res as any).status === 200)) {
+          const user = (res.data?.user) || (res.data);
+          if (user?.role) localStorage.setItem('userRole', user.role);
+          if (user) localStorage.setItem('userInfo', JSON.stringify(user));
+          setIsLoggedIn(true);
+        } else if (!token) {
+          setIsLoggedIn(false);
+        }
+      } catch {
+        if (!token) setIsLoggedIn(false);
+      }
+    };
+    checkLogin();
   }, []);
 
   if (isLoggedIn === null) return null; // loading

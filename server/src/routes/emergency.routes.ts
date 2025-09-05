@@ -3,6 +3,7 @@ import type { Server as IOServer } from 'socket.io';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { initiateEmergency, cancelEmergency, uploadAudioBase64, commitEmergency } from '../controllers/emergency.controller';
 import { EmergencyAlert } from '../models/emergency.model';
+import { clear } from 'console';
 
 export default function emergencyRoutes(io: IOServer) {
   const router = Router();
@@ -13,19 +14,22 @@ export default function emergencyRoutes(io: IOServer) {
   // 家属端：获取我能看到的紧急告警（按时间倒序）
   router.get('/family', authenticateToken, async (req, res) => {
     try {
+      // const list = await EmergencyAlert.find()
+
       const userId = (req as any).userId as string;
       const me = await (await import('../models/user.model')).User.findById(userId).select('username phone').lean();
 
-      // 直接在紧急求助表中根据联系人信息筛选
+      // // 直接在紧急求助表中根据联系人信息筛选
       const query: any = [];
-      if (me?.username) query.push({ contactName: me.username });
-      if (me?.phone) query.push({ contactPhone: me.phone });
-
+      if (me?.username) query.push({ elderlyName: me.username });
+      // if (me?.phone) query.push({ contactPhone: me.phone });
+      console.log(query, 2);
       const list = await EmergencyAlert.find(query.length ? { $or: query } : { _id: null })
         .sort({ createdAt: -1 })
         .limit(100)
         .select('userId status triggerTime createdAt location aiAnalysis transcript elderlyName contactName contactPhone')
         .lean();
+      // console.log(list, 2);
       return res.json({ code: 200, message: 'ok', data: list });
     } catch (e) {
       console.error('[Emergency] Family query error:', e);

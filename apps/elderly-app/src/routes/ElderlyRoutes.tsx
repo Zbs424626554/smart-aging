@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthService } from "../services/auth.service";
 import { PrivateRoute } from "../components/PrivateRoute";
@@ -14,18 +14,75 @@ import Chat from "../pages/Chat";
 
 // 根路由重定向组件
 const RootRedirect: React.FC = () => {
-  const isLoggedIn = AuthService.isLoggedIn();
-  const currentRole = AuthService.getCurrentRole();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [resolvedRole, setResolvedRole] = useState<string | null>(AuthService.getCurrentRole());
 
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
+  useEffect(() => {
+    const checkLogin = async () => {
+      try {
+        // 1) 优先处理 URL 携带的 ssoToken（跨端跳转时注入）
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          const ssoToken = url.searchParams.get('ssoToken');
+          if (ssoToken) {
+            localStorage.setItem('token', ssoToken);
+            try {
+              const payloadBase64 = ssoToken.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+              if (payloadBase64) {
+                const payload = JSON.parse(atob(payloadBase64));
+                if (payload?.role) {
+                  localStorage.setItem('userRole', payload.role);
+                  setResolvedRole(payload.role);
+                }
+              }
+            } catch { }
+            // 清理 URL 参数
+            url.searchParams.delete('ssoToken');
+            window.history.replaceState(null, '', url.toString());
+          }
+        }
 
-  if (currentRole === "elderly") {
-    return <Navigate to="/home" replace />;
-  }
+        // 2) 若本地已有 token，优先从 token 解出 role
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (token) {
+          try {
+            const payloadBase64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+            if (payloadBase64) {
+              const payload = JSON.parse(atob(payloadBase64));
+              if (payload?.role) {
+                localStorage.setItem('userRole', payload.role);
+                setResolvedRole(payload.role);
+              }
+            }
+          } catch { }
+          // 立即视为登录，同时继续发起 profile 请求以写入 userInfo，避免沿用旧信息
+          setIsLoggedIn(true);
+        }
+        const res: any = await AuthService.getProfile();
+        if ((res?.code === 200) || (res?.data && (res as any).status === 200)) {
+          // 服务端已识别登录（Cookie），视为已登录，并补写本地 userRole/userInfo
+          const user = (res.data?.user) || (res.data);
+          if (user?.role) {
+            localStorage.setItem('userRole', user.role);
+            setResolvedRole(user.role);
+          }
+          if (user) {
+            localStorage.setItem('userInfo', JSON.stringify(user));
+          }
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+    checkLogin();
+  }, []);
 
-  // 其他角色或异常情况，统一跳转登录页
+  if (isLoggedIn === null) return null;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (resolvedRole === "elderly") return <Navigate to="/home" replace />;
   return <Navigate to="/login" replace />;
 };
 

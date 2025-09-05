@@ -72,7 +72,9 @@ request.interceptors.response.use(
       // 处理特定错误码
       switch (data.code) {
         case 401:
-          // 未授权，清除token并跳转到登录页
+          if (response.config?.url && response.config.url.includes('/auth/profile')) {
+            return Promise.reject(new Error('Unauthorized'));
+          }
           localStorage.removeItem('token');
           localStorage.removeItem('userRole');
           localStorage.removeItem('userInfo');

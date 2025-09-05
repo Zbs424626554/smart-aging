@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthService } from "../services/auth.service";
 import { PrivateRoute } from "../components/PrivateRoute";
@@ -20,18 +20,55 @@ import Chat from "../pages/Chat";
 
 // 根路由重定向组件
 const RootRedirect: React.FC = () => {
-  const isLoggedIn = AuthService.isLoggedIn();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const currentRole = AuthService.getCurrentRole();
 
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
+  useEffect(() => {
+    const checkLogin = async () => {
+      try {
+        // 1) 读取 URL 中的 ssoToken 并写入本地
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          const ssoToken = url.searchParams.get('ssoToken');
+          if (ssoToken) {
+            localStorage.setItem('token', ssoToken);
+            url.searchParams.delete('ssoToken');
+            window.history.replaceState(null, '', url.toString());
+          }
+        }
 
-  if (currentRole === "nurse") {
-    return <Navigate to="/home" replace />;
-  }
+        // 2) 若本地已有 token，优先从 token 解出 role
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (token) {
+          try {
+            const payloadBase64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+            if (payloadBase64) {
+              const payload = JSON.parse(atob(payloadBase64));
+              if (payload?.role) localStorage.setItem('userRole', payload.role);
+            }
+          } catch { }
+          // 视为已登录，但继续请求 profile 以刷新 userInfo
+          setIsLoggedIn(true);
+        }
+        const res: any = await AuthService.getProfile();
+        if ((res?.code === 200) || (res?.data && (res as any).status === 200)) {
+          const user = (res.data?.user) || (res.data);
+          if (user?.role) localStorage.setItem('userRole', user.role);
+          if (user) localStorage.setItem('userInfo', JSON.stringify(user));
+          setIsLoggedIn(true);
+        } else if (!token) {
+          setIsLoggedIn(false);
+        }
+      } catch {
+        if (!token) setIsLoggedIn(false);
+      }
+    };
+    checkLogin();
+  }, []);
 
-  // 其他角色或异常情况，统一跳转登录页
+  if (isLoggedIn === null) return null;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (currentRole === "nurse") return <Navigate to="/home" replace />;
   return <Navigate to="/login" replace />;
 };
 
