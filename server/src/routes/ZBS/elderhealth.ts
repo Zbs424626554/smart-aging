@@ -23,7 +23,8 @@ router.get("/elderhealth/me", async (req: Request, res: Response) => {
 
     // 允许通过查询参数传入 elderId 作为兜底
     const elderIdFromQuery = (req.query.elderId as string) || null;
-    const elderId = userId || elderIdFromQuery;
+    // 护士端更新指定老人，应优先使用查询参数 elderId，其次再回退到 token 中的 id
+    const elderId = elderIdFromQuery || userId;
 
     if (!elderId) {
       return res.json({ code: 401, message: "未登录", data: null });
@@ -422,6 +423,71 @@ router.post("/elderhealth/age", async (req: Request, res: Response) => {
     return res.json({ code: 200, message: "年龄更新成功", data: archive });
   } catch (error) {
     console.error("更新年龄失败:", error);
+    return res
+      .status(500)
+      .json({ code: 500, message: "服务器错误", data: null });
+  }
+});
+
+// 更新生命体征（体温/血糖/血压/心率/血氧）
+router.post("/elderhealth/vitals", async (req: Request, res: Response) => {
+  try {
+    const auth = req.headers.authorization;
+    let userId: string | null = null;
+
+    if (auth && auth.startsWith("Bearer ")) {
+      const token = auth.slice(7);
+      try {
+        const payload = verifyToken(token) as any;
+        userId = payload?.id || null;
+      } catch (err) {
+        // ignore token errors
+      }
+    }
+
+    // 护士端没有老人token，因此允许通过查询参数 elderId 指定目标老人
+    const elderIdFromQuery = (req.query.elderId as string) || null;
+    // 优先使用查询参数 elderId（护士端场景），若无则回退到 token
+    const elderId = elderIdFromQuery || userId;
+
+    if (!elderId) {
+      return res.json({ code: 401, message: "未登录", data: null });
+    }
+
+    const { temperature, bloodSugar, bloodPressure, heartRate, oxygenLevel } = req.body || {};
+
+    // 构建更新对象（仅更新提供的字段）
+    const toSet: any = {};
+    if (typeof temperature !== "undefined") toSet.temperature = Number(temperature);
+    if (typeof bloodSugar !== "undefined") toSet.bloodSugar = Number(bloodSugar);
+    if (typeof heartRate !== "undefined") toSet.heartRate = Number(heartRate);
+    if (typeof oxygenLevel !== "undefined") toSet.oxygenLevel = Number(oxygenLevel);
+    if (typeof bloodPressure !== "undefined") {
+      const bpStr = String(bloodPressure).trim();
+      const ok = /^\d+\/\d+$/.test(bpStr);
+      if (!ok) {
+        return res.json({ code: 400, message: "血压格式应为 收缩压/舒张压（如120/80）", data: null });
+      }
+      toSet.bloodPressure = bpStr;
+    }
+
+    if (Object.keys(toSet).length === 0) {
+      return res.json({ code: 400, message: "没有需要更新的字段", data: null });
+    }
+
+    await ElderHealthArchive.updateOne(
+      { elderID: elderId },
+      { $set: toSet, $currentDate: { updatedAt: true } }
+    );
+
+    const updated = await ElderHealthArchive.findOne({ elderID: elderId });
+    if (!updated) {
+      return res.json({ code: 404, message: "未找到健康档案", data: null });
+    }
+
+    return res.json({ code: 200, message: "保存成功", data: updated });
+  } catch (error) {
+    console.error("更新生命体征失败:", error);
     return res
       .status(500)
       .json({ code: 500, message: "服务器错误", data: null });

@@ -1,13 +1,13 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { AuthService } from "../services/auth.service";
-import { PrivateRoute } from "../components/PrivateRoute";
-import { Login, Register } from "@smart-aging/packages";
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthService } from '../services/auth.service';
+import { PrivateRoute } from '../components/PrivateRoute';
+import { Login, Register } from '@smart-aging/packages';
 // 老人端页面
-import Layout from "../pages/Layout";
-import Emergency from "../pages/Emergency";
-import Orders from "../pages/Orders";
-import Profile from "../pages/Profile";
+import Layout from '../pages/Layout';
+import Emergency from '../pages/Emergency';
+import Orders from '../pages/Orders';
+import Profile from '../pages/Profile';
 import Message from "../pages/Message";
 import Heath from "../pages/Health";
 import Chat from "../pages/Chat";
@@ -21,7 +21,7 @@ const RootRedirect: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (currentRole === "elderly") {
+  if (currentRole === 'elderly') {
     return <Navigate to="/home" replace />;
   }
 
@@ -44,7 +44,7 @@ const ElderlyRoutes: React.FC = () => {
       <Route
         path="/home"
         element={
-          <PrivateRoute requiredRoles={["elderly"]}>
+          <PrivateRoute requiredRoles={['elderly']}>
             <Layout />
           </PrivateRoute>
         }
@@ -54,9 +54,10 @@ const ElderlyRoutes: React.FC = () => {
         <Route path="orders" element={<Orders />} />
         <Route path="message" element={<Message />} />
         <Route path="mine" element={<Profile />} />
+        <Route path="health" element={<Heath />} />
       </Route>
       <Route path="chat/:id" element={<Chat />} />
-      <Route path="health" element={<Heath />} />
+
 
       {/* 404页面 */}
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -64,4 +65,4 @@ const ElderlyRoutes: React.FC = () => {
   );
 };
 
-export default ElderlyRoutes;
+export default ElderlyRoutes; 

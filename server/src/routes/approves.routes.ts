@@ -35,14 +35,15 @@ router.get('/', async (req: Request, res: Response) => {
             .sort({ submitTime: -1 })
             .lean();
 
+        const typeLabel = (t?: string) => t === 'nursing' ? '护理资格证' : (t === 'health' ? '健康证' : (t === 'both' ? 'both' : '—'));
         const data = docs.map((d: any) => ({
             id: d._id?.toString?.() || String(d._id),
             nurseId: d.nurseId?.toString?.() || d.nurseId,
             nurseName: d.nurseName,
-            phone: '—',
+            phone: d.phone || '—',
             idCard: d.idcard, // 注意：集合字段为 idcard，这里输出为 idCard 以适配前端
             certificateNo: d.certificateNumber || '—',
-            certificateType: d.certificateType || '—',
+            certificateType: typeLabel(d.certificateType),
             certificateImage: d.certificateImage || '',
             idCardFront: d.idCardFront || '',
             idCardBack: d.idCardBack || '',
@@ -66,19 +67,29 @@ router.post('/', async (req: Request, res: Response) => {
         const userId = getUserIdFromReq(req);
         const body = req.body as any;
         const nurseName = body.nurseName;
-        const idcard = body.idcard;
+        const phone = body.phone;
+        const idcard = body.idcard || body.idCard; // 兼容
         const certificateImage = body.certificateImage;
         const idCardFront = body.idCardFront;
         const idCardBack = body.idCardBack;
+        const certificateNumber = body.certificateNo || body.certificateNumber;
+        // 兼容中文/英文/默认
+        const ctRaw: any = body.certificateType;
+        const certificateType: 'nursing' | 'health' | 'both' =
+            ctRaw === '护理资格证' ? 'nursing' :
+                ctRaw === '健康证' ? 'health' :
+                    (ctRaw === 'nursing' || ctRaw === 'health' || ctRaw === 'both') ? ctRaw : 'nursing';
 
         const doc = await Approve.create({
             ...(userId && { nurseId: new mongoose.Types.ObjectId(userId) }),
             ...(nurseName && { nurseName }),
+            ...(phone && { phone }),
             ...(idcard && { idcard }),
             ...(certificateImage && { certificateImage }),
             ...(idCardFront && { idCardFront }),
             ...(idCardBack && { idCardBack }),
-            certificateType: 'both',
+            ...(certificateNumber && { certificateNumber }),
+            certificateType,
             status: 'pending',
             submitTime: new Date(),
         } as any);
@@ -191,14 +202,15 @@ router.get('/:id', async (req: Request, res: Response) => {
         if (!d) {
             return res.json({ code: 404, message: '记录不存在', data: null });
         }
+        const typeLabelOne = (t?: string) => t === 'nursing' ? '护理资格证' : (t === 'health' ? '健康证' : (t === 'both' ? 'both' : '—'));
         const data = {
             id: d._id?.toString?.() || String(d._id),
             nurseId: d.nurseId?.toString?.() || d.nurseId,
             nurseName: d.nurseName,
-            phone: '—',
+            phone: d.phone || '—',
             idCard: d.idcard,
             certificateNo: d.certificateNumber || '—',
-            certificateType: d.certificateType || '—',
+            certificateType: typeLabelOne(d.certificateType),
             certificateImage: d.certificateImage || '',
             idCardFront: d.idCardFront || '',
             idCardBack: d.idCardBack || '',

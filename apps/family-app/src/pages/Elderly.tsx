@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Modal, Form, Input, Avatar, Tag, SearchBar, Toast, Empty,Dialog } from 'antd-mobile';
+import { Card, Button, Modal, Form, Input, Avatar, Tag, SearchBar, Toast, Empty } from 'antd-mobile';
 import { AddOutline, UserOutline, LeftOutline } from 'antd-mobile-icons';
 import { useNavigate } from 'react-router-dom';
 import styles from './Elderly.module.css';
@@ -29,10 +29,8 @@ const Elderly: React.FC = () => {
   const [elderly, setElderly] = useState<Elderly[]>([]);
   const [loading, setLoading] = useState(false);
   const [availableElderly, setAvailableElderly] = useState<ElderlyUser[]>([]);
-  const [filter,setfilter]=useState<ElderlyUser[]>([])
   const [form] = Form.useForm();
-  const [chg,setchg]=useState(0)
-  const [searchTerm, setSearchTerm] = useState('')
+
   // 获取可绑定的老人列表
   const fetchAvailableElderly = async () => {
     try {
@@ -52,14 +50,6 @@ const Elderly: React.FC = () => {
       setAvailableElderly([]);
     }
   };
-  const search=()=>{
-    // console.log(form.getFieldValue('username'));
-    setSearchTerm(form.getFieldValue('username'))
-    const list=availableElderly.filter(i=>i.username.includes(form.getFieldValue('username')))
-    setfilter(list)
-    // form.resetFields()
-
-  }
 
   // 获取老人列表
   const fetchElderlyList = async () => {
@@ -152,16 +142,8 @@ const Elderly: React.FC = () => {
   // 解绑老人
   const handleUnbindElderly = async (id: string, name: string) => {
     // 显示确认对话框
-    const result=await Dialog.confirm({
-      content:`确定要解绑老人 ${name} 吗？解绑后该老人将不再出现在您的列表中。`,
-      confirmText:'确认',
-      cancelText:'取消'
-    })
-    // const confirmed = window.confirm(`确定要解绑老人 ${name} 吗？解绑后该老人将不再出现在您的列表中。`);
-    // if (!confirmed) {
-    //   return;
-    // }
-    if(!result){
+    const confirmed = window.confirm(`确定要解绑老人 ${name} 吗？解绑后该老人将不再出现在您的列表中。`);
+    if (!confirmed) {
       return;
     }
 
@@ -219,7 +201,7 @@ const Elderly: React.FC = () => {
           <Empty
             className={styles.emptyContainer}
             description="暂无老人信息"
-            image={<UserOutline style={{ fontSize: 48, color: "#ccc" }} />}
+            image={<UserOutline style={{ fontSize: 48, color: '#ccc' }} />}
           />
         ) : (
           filteredElderly.map((elderly) => (
@@ -228,13 +210,12 @@ const Elderly: React.FC = () => {
                 <div className={styles.elderlyInfo}>
                   <Avatar
                     className={styles.elderlyAvatar}
-                    src={elderly.avatar || ""}
+                    src={elderly.avatar || ''}
                   />
                   <div className={styles.elderlyDetails}>
                     <div className={styles.elderlyName}>{elderly.name}</div>
                     <div className={styles.elderlyBasic}>
-                      {/* {elderly.phone} | 绑定{elderly.boundYears || 1}年 */}
-                      手机号:{elderly.phone}
+                      {elderly.phone} | 绑定{elderly.boundYears || 1}年
                     </div>
                   </div>
                 </div>
@@ -243,9 +224,7 @@ const Elderly: React.FC = () => {
                     className={styles.actionBtn}
                     size="small"
                     fill="outline"
-                    onClick={() =>
-                      handleUnbindElderly(elderly.id, elderly.name)
-                    }
+                    onClick={() => handleUnbindElderly(elderly.id, elderly.name)}
                   >
                     解绑
                   </Button>
@@ -256,13 +235,7 @@ const Elderly: React.FC = () => {
                 <div className={styles.healthStatus}>
                   <span className={styles.statusLabel}>健康状态:</span>
                   <Tag
-                    color={
-                      elderly.healthStatus === "良好"
-                        ? "success"
-                        : elderly.healthStatus === "需关注"
-                          ? "warning"
-                          : "danger"
-                    }
+                    color={elderly.healthStatus === '良好' ? 'success' : elderly.healthStatus === '需关注' ? 'warning' : 'danger'}
                   >
                     {elderly.healthStatus}
                   </Tag>
@@ -270,21 +243,15 @@ const Elderly: React.FC = () => {
                 <div className={styles.healthMetrics}>
                   <div className={styles.metricItem}>
                     <div className={styles.metricLabel}>血压</div>
-                    <div className={styles.metricValue}>
-                      {elderly.bloodPressure}
-                    </div>
+                    <div className={styles.metricValue}>{elderly.bloodPressure}</div>
                   </div>
                   <div className={styles.metricItem}>
                     <div className={styles.metricLabel}>血糖</div>
-                    <div className={styles.metricValue}>
-                      {elderly.bloodSugar}
-                    </div>
+                    <div className={styles.metricValue}>{elderly.bloodSugar}</div>
                   </div>
                   <div className={styles.metricItem}>
                     <div className={styles.metricLabel}>心率</div>
-                    <div className={styles.metricValue}>
-                      {elderly.heartRate}
-                    </div>
+                    <div className={styles.metricValue}>{elderly.heartRate}</div>
                   </div>
                 </div>
               </div>
@@ -315,12 +282,14 @@ const Elderly: React.FC = () => {
           <AddOutline />
         </Button>
         {availableElderly.length === 0 && (
-          <div className={styles.addButtonHint}>暂无可绑定的老人</div>
+          <div className={styles.addButtonHint}>
+            暂无可绑定的老人
+          </div>
         )}
       </div>
 
       {/* 测试按钮 */}
-      {/* <div className={styles.testContainer}>
+      <div className={styles.testContainer}>
         <Button
           className={styles.testButton}
           color="default"
@@ -345,7 +314,7 @@ const Elderly: React.FC = () => {
         >
           测试API连接
         </Button>
-      </div> */}
+      </div>
 
       {/* 添加老人模态框 */}
       <Modal
@@ -355,96 +324,33 @@ const Elderly: React.FC = () => {
           <div className={styles.bindModalContent}>
             {availableElderly.length > 0 ? (
               <>
-                <Form form={form} layout="vertical" onFinish={handleAddElderly}>
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={handleAddElderly}
+                >
                   <Form.Item
                     label="用户名"
                     name="username"
-                    rules={[{ required: true, message: "请输入老人用户名" }]}
+                    rules={[{ required: true, message: '请输入老人用户名' }]}
                   >
-                    <div style={{ display: "flex" }}>
-                      <Input
-                        value={form.getFieldValue("username") || ""}
-                        onChange={(val) => {form.setFieldValue("username", val);setchg((i)=>i+1)}}
-                        placeholder="请输入老人用户名"
-                      />
-                      <button
-                        type="button"
-                        onClick={search}
-                        style={{ backgroundColor: "white", border: "0" }}
-                      >
-                        🔍
-                      </button>
-                    </div>
+                    <Input placeholder="请输入老人用户名" />
                   </Form.Item>
                 </Form>
 
                 <div className={styles.availableElderlyHint}>
                   <div className={styles.hintTitle}>可绑定的老人：</div>
                   <div className={styles.availableElderlyList}>
-                    {(() => {
-                      // 如果没有搜索过，显示全部
-                      if (!searchTerm) {
-                        return availableElderly.map((elderly, index) => (
-                          <div
-                            key={index}
-                            className={styles.availableElderlyItem}
-                            onClick={() => {
-                              console.log(222);
-
-                              form.setFieldValue("username", elderly.realname);
-                              setchg((i)=>i+1)
-                            }}
-                            style={
-                              form.getFieldValue('username') == elderly.username
-                                ? { backgroundColor: "blue" }
-                                : {}
-                            }
-                          >
-                            <span className={styles.elderlyName}>
-                              {elderly.realname || elderly.username}
-                            </span>
-                            <span className={styles.elderlyUsername}>
-                              ({elderly.username})
-                            </span>
-                          </div>
-                        ));
-                      }
-
-                      // 搜索过但无结果
-                      if (filter.length === 0) {
-                        return (
-                          <div className={styles.noResults}>
-                            未找到匹配的老人
-                          </div>
-                        );
-                      }
-
-                      // 有搜索结果
-                      return filter.map((elderly, index) => (
-                        <div
-                          key={index}
-                          className={styles.availableElderlyItem}
-                          onClick={() => {
-                            console.log(111);
-
-                            form.setFieldValue("username", elderly.realname);
-                            setchg((i)=>i+1)
-                          }}
-                          style={
-                            form.getFieldValue('username') == elderly.username
-                              ? { backgroundColor: "lightBlue" }
-                              : {}
-                          }
-                        >
-                          <span className={styles.elderlyName}>
-                            {elderly.realname || elderly.username}
-                          </span>
-                          <span className={styles.elderlyUsername}>
-                            ({elderly.username})
-                          </span>
-                        </div>
-                      ));
-                    })()}
+                    {availableElderly.map((elderly, index) => (
+                      <div key={index} className={styles.availableElderlyItem}>
+                        <span className={styles.elderlyName}>
+                          {elderly.realname || elderly.username}
+                        </span>
+                        <span className={styles.elderlyUsername}>
+                          ({elderly.username})
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -473,31 +379,27 @@ const Elderly: React.FC = () => {
         }
         closeOnAction
         actions={
-          availableElderly.length > 0
-            ? [
-                {
-                  key: "cancel",
-                  text: "取消",
-                },
-                {
-                  key: "confirm",
-                  text: "确认",
-                  onClick: handleAddElderly,
-                },
-              ]
-            : [
-                {
-                  key: "close",
-                  text: "关闭",
-                },
-              ]
+          availableElderly.length > 0 ? [
+            {
+              key: 'cancel',
+              text: '取消',
+            },
+            {
+              key: 'confirm',
+              text: '确认',
+              onClick: handleAddElderly,
+            },
+          ] : [
+            {
+              key: 'close',
+              text: '关闭',
+            }
+          ]
         }
         onAction={(action) => {
-          if (action.key === "cancel" || action.key === "close") {
+          if (action.key === 'cancel' || action.key === 'close') {
             setShowAddModal(false);
             form.resetFields();
-            setfilter([]);
-            setSearchTerm("");
           }
         }}
       />

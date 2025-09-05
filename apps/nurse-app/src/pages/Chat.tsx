@@ -24,6 +24,7 @@ import {
   EnvironmentOutlined,
 } from "@ant-design/icons";
 import EmojiPicker from "emoji-picker-react";
+import PageNavBar from "../components/PageNavBar";
 import {
   MessageService,
   type ChatMessage,
@@ -1925,6 +1926,15 @@ export default function Chat() {
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <div style={{ flexShrink: 0, background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
+        <PageNavBar
+          title={(conversation?.users || [])
+            .filter((u) => u.username !== currentUser?.username)
+            .map((u) => u.realname || u.username)
+            .join(", ") || "聊天"}
+          fallbackPath="/home/message"
+        />
+      </div>
       {/* 来电邀请弹窗 */}
       {callInvite.isVisible && (
         <div
@@ -2228,8 +2238,8 @@ export default function Chat() {
                   ? "#ff4d4f"
                   : "#52c41a",
               border: `1px solid ${callSession.isActive && callSession.callType === "voice"
-                  ? "#ff4d4f"
-                  : "#52c41a"
+                ? "#ff4d4f"
+                : "#52c41a"
                 }`,
               borderRadius: "50%",
               width: "40px",
@@ -2260,8 +2270,8 @@ export default function Chat() {
                   ? "#ff4d4f"
                   : "#1890ff",
               border: `1px solid ${callSession.isActive && callSession.callType === "video"
-                  ? "#ff4d4f"
-                  : "#1890ff"
+                ? "#ff4d4f"
+                : "#1890ff"
                 }`,
               borderRadius: "50%",
               width: "40px",

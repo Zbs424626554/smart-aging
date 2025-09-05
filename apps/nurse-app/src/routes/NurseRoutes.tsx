@@ -17,7 +17,7 @@ import Message from "../pages/Message";
 import Health from "../pages/Health";
 import OrderDetail from "../pages/OrderDetail";
 import Chat from "../pages/Chat";
-
+import Healthce from "../pages/Healthce";
 // 根路由重定向组件
 const RootRedirect: React.FC = () => {
   const isLoggedIn = AuthService.isLoggedIn();
@@ -62,7 +62,7 @@ const NurseRoutes: React.FC = () => {
         <Route path="orders/:id" element={<OrderDetail />} />
         <Route path="income" element={<Income />} />
         <Route path="schedule" element={<Schedule />} />
-
+        <Route path="healthce" element={<Healthce />} />
         <Route path="message" element={<Message />} />
         <Route path="health" element={<Health />} />
       </Route>

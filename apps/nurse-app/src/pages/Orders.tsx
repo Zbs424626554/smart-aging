@@ -5,7 +5,6 @@ import {
   Tag,
   Space,
   // Avatar,
-  Rate,
   // Badge,
   Tabs,
   // Input,
@@ -66,6 +65,7 @@ const Orders: React.FC = () => {
   const [myOrders, setMyOrders] = useState<ServiceOrder[]>([]);
   // const [searchText] = useState('');
   // const [selectedSkills] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('all');
 
 
   // 百度地图导航（JS SDK 交互式地图，脚本在 index.html 中注入）
@@ -78,6 +78,12 @@ const Orders: React.FC = () => {
   const navOriginRef = useRef<{ lng: number; lat: number } | null>(null);
   const navDestinationRef = useRef<{ lng: number; lat: number } | null>(null);
   const [navUrl, setNavUrl] = useState<string>('');
+  // 安全区域相关
+  const [safetyRadius] = useState<number>(500); // 米
+  const safetyCircleRef = useRef<any>(null);
+  const currentMarkerRef = useRef<any>(null);
+  const geoWatchIdRef = useRef<number | null>(null);
+  const hasAlertedRef = useRef<boolean>(false);
 
   const handleStartNavigation = () => {
     if (!navUrl) {
@@ -199,7 +205,7 @@ const Orders: React.FC = () => {
           });
         };
 
-        // 固定起点坐标（lng, lat）
+        // 固定起点坐标（lng, lat）- 若稍后拿到实时定位会替换
         let origin = new BMapGL.Point(115.488818, 38.814838);
         let destination = await getDestinationPoint(navOrder);
 
@@ -254,9 +260,23 @@ const Orders: React.FC = () => {
             endLabel.setStyle({ color: '#ff4d4f', fontSize: '12px', backgroundColor: 'transparent', border: 'none' });
             map.addOverlay(endLabel);
           } catch { }
+
+          // 绘制安全区域圆形
+          try {
+            const circle = new BMapGL.Circle(destination, safetyRadius, {
+              strokeColor: '#1677ff',
+              strokeWeight: 2,
+              strokeOpacity: 0.9,
+              fillColor: '#1677ff',
+              fillOpacity: 0.2
+            });
+            map.addOverlay(circle);
+            safetyCircleRef.current = circle;
+          } catch { }
         }
 
-        // 规划驾车路线（起点已固定）
+        // 规划驾车路线
+
 
         // 固定起点，不进行偏差修正
 
@@ -288,6 +308,62 @@ const Orders: React.FC = () => {
             }
           } catch { }
         });
+
+        // 启动地理围栏监控：监听护士当前位置是否超出安全区域
+        try {
+          hasAlertedRef.current = false;
+          if (navigator.geolocation) {
+            const watchId = navigator.geolocation.watchPosition(
+              (pos) => {
+                const lng = pos.coords.longitude;
+                const lat = pos.coords.latitude;
+                const cur = new BMapGL.Point(lng, lat);
+                // 记录并更新“我的位置”标注
+                try { navOriginRef.current = { lng, lat }; } catch { }
+                if (currentMarkerRef.current) {
+                  try { currentMarkerRef.current.setPosition(cur); } catch { }
+                } else {
+                  try {
+                    const m = new BMapGL.Marker(cur);
+                    map.addOverlay(m);
+                    const label = new BMapGL.Label('我的位置', { position: cur, offset: new BMapGL.Size(10, -20) });
+                    label.setStyle({ color: '#1677ff', fontSize: '12px', backgroundColor: 'transparent', border: 'none' });
+                    map.addOverlay(label);
+                    currentMarkerRef.current = m;
+                  } catch { }
+                }
+
+                // 计算与目的地距离
+                try {
+                  if (navDestinationRef.current && typeof map.getDistance === 'function') {
+                    const dist = map.getDistance(cur, new BMapGL.Point(navDestinationRef.current.lng, navDestinationRef.current.lat));
+                    // 超出安全半径则报警
+                    if (dist > safetyRadius && !hasAlertedRef.current) {
+                      hasAlertedRef.current = true;
+                      try {
+                        import('../services/emergency.service').then(async (mod) => {
+                          try {
+                            const res = await mod.EmergencyService.initiate();
+                            const alertId = res.alertId;
+                            await mod.EmergencyService.commit(alertId, {
+                              location: { type: 'Point', coordinates: [lng, lat] }
+                            } as any);
+                            message.warning('已离开安全区域，已自动发出报警');
+                          } catch {
+                            message.error('离开安全区域，报警失败');
+                          }
+                        });
+                      } catch { }
+                    }
+                  }
+                } catch { }
+              },
+              () => { /* ignore error */ },
+              { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+            );
+            geoWatchIdRef.current = watchId as unknown as number;
+          }
+        } catch { }
 
         // 生成“开始导航”URL（外部页面 turn-by-turn）
         try {
@@ -333,6 +409,13 @@ const Orders: React.FC = () => {
       }
       mapRef.current = null;
       setMapLoading(false);
+      // 移除地理围栏监听
+      try {
+        if (geoWatchIdRef.current != null && navigator.geolocation) {
+          navigator.geolocation.clearWatch(geoWatchIdRef.current);
+          geoWatchIdRef.current = null;
+        }
+      } catch { }
     };
   }, [mapVisible, navOrder]);
 
@@ -473,11 +556,23 @@ const Orders: React.FC = () => {
 
 
   // 筛选我的订单
-  const filteredMyOrders = myOrders;
+  const filteredMyOrders = myOrders.filter((order) => {
+    const statusValue = (order.status as unknown as string);
+    switch (activeTab) {
+      case 'pending':
+        return order.status === 'assigned' || statusValue === 'pending';
+      case 'progress':
+        return order.status === 'processing' || statusValue === 'progress';
+      case 'completed':
+        return order.status === 'completed';
+      default:
+        return true;
+    }
+  });
 
   const renderOrderCard = (order: ServiceOrder, isMyOrder: boolean = false) => {
     const statusColor = order.status === 'assigned' ? 'blue' : order.status === 'processing' ? 'orange' : order.status === 'completed' ? 'green' : 'red';
-    const statusLabel = order.status === 'assigned' ? '待接收' : order.status === 'processing' ? '进行中' : order.status === 'completed' ? '已完成' : '已取消';
+    const statusLabel = order.status === 'assigned' ? '待接受' : order.status === 'processing' ? '进行中' : order.status === 'completed' ? '已完成' : '已取消';
 
     return (
       <div style={{
@@ -497,16 +592,18 @@ const Orders: React.FC = () => {
           <Tag color={statusColor} style={{ borderRadius: '6px', fontWeight: '500' }}>{statusLabel}</Tag>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, cursor: 'default' }}
+        >
           <EnvironmentOutlined style={{ color: '#8c8c8c', fontSize: '16px' }} />
           <Text style={{ color: '#595959', fontSize: '14px' }}>{order.location}</Text>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
-          <DollarOutlined style={{ color: '#faad14', fontSize: '16px' }} />
-          <Text strong style={{ color: '#faad14', fontSize: '18px' }}>¥{order.price}</Text>
+          <DollarOutlined style={{ color: 'red', fontSize: '16px' }} />
+          <Text strong style={{ color: 'red', fontSize: '18px' }}>¥{order.price}</Text>
           <Text type="secondary" style={{ fontSize: '14px' }}>/天</Text>
-          <Text type="secondary" style={{ marginLeft: 16, fontSize: '14px' }}>{order.duration || '—'}</Text>
+
         </div>
 
         <Divider style={{ margin: '20px 0', borderColor: '#f0f0f0' }} />
@@ -518,16 +615,6 @@ const Orders: React.FC = () => {
           </div>
 
           <Space size="small">
-            {isMyOrder && order.status === 'assigned' && (
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => handleUpdateOrderStatus(order.id, 'processing')}
-                style={{ borderRadius: '8px', fontWeight: '500' }}
-              >
-                开始服务
-              </Button>
-            )}
             {isMyOrder && order.status === 'processing' && (
               <Button
                 type="primary"
@@ -570,18 +657,7 @@ const Orders: React.FC = () => {
     }}>
       <Title level={2} style={{ marginBottom: '24px', color: '#262626' }}>服务订单</Title>
 
-      {/* 搜索和筛选 */}
-      <div style={{
-        background: 'white',
-        padding: '20px',
-        borderRadius: '12px',
-        marginBottom: '20px',
-        border: '1px solid #e8e8e8'
-      }}>
-        <Text type="secondary" style={{ fontSize: '14px' }}>
-          当前显示：我的订单 ({filteredMyOrders.length} 个)
-        </Text>
-      </div>
+
 
       {/* 订单列表 */}
       <div style={{
@@ -590,8 +666,62 @@ const Orders: React.FC = () => {
         border: '1px solid #e8e8e8',
         overflow: 'hidden'
       }}>
-        <Tabs defaultActiveKey="my-orders">
-          <TabPane tab="我的订单" key="my-orders">
+        <Tabs
+          activeKey={activeTab}
+          onChange={(k) => setActiveTab(k)}
+          centered
+          tabBarGutter={48}
+          tabBarStyle={{ display: 'flex', justifyContent: 'center' }}
+        >
+          <TabPane tab="全部" key="all">
+            {filteredMyOrders.length > 0 ? (
+              <div style={{ padding: '16px' }} >
+                {filteredMyOrders.map(order => (
+                  <div key={order.id}>
+                    {renderOrderCard(order, true)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty
+                description="暂无我的订单"
+                style={{ padding: '40px 16px' }}
+              />
+            )}
+          </TabPane>
+          <TabPane tab="待接受" key="pending">
+            {filteredMyOrders.length > 0 ? (
+              <div style={{ padding: '16px' }} >
+                {filteredMyOrders.map(order => (
+                  <div key={order.id}>
+                    {renderOrderCard(order, true)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty
+                description="暂无我的订单"
+                style={{ padding: '40px 16px' }}
+              />
+            )}
+          </TabPane>
+          <TabPane tab="进行中" key="progress">
+            {filteredMyOrders.length > 0 ? (
+              <div style={{ padding: '16px' }} >
+                {filteredMyOrders.map(order => (
+                  <div key={order.id}>
+                    {renderOrderCard(order, true)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty
+                description="暂无我的订单"
+                style={{ padding: '40px 16px' }}
+              />
+            )}
+          </TabPane>
+          <TabPane tab="已完成" key="completed">
             {filteredMyOrders.length > 0 ? (
               <div style={{ padding: '16px' }} >
                 {filteredMyOrders.map(order => (
@@ -653,7 +783,6 @@ const Orders: React.FC = () => {
             onClick={(e) => { e.stopPropagation(); }}
           >
             <div style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-              <Button onClick={() => setMapVisible(false)}>返回</Button>
               <Button type="primary" size="large" style={{ minWidth: 160 }} disabled={!navUrl} onClick={handleStartNavigation}>开始导航</Button>
             </div>
           </div>

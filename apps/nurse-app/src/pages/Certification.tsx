@@ -7,9 +7,6 @@ import {
   Button,
   Select,
   message,
-  Steps,
-  Space,
-  Divider,
   Alert,
   Card,
   Row,
@@ -29,15 +26,18 @@ import {
 } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import request from '../utils/request';
+import ApproveService from '../services/approve.service';
+import HorizontalStepper from '../components/HorizontalStepper';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 interface CertificationForm {
-  realName: string;
-  idNumber: string;
-  nursingCert: UploadFile[];
-  healthCert: UploadFile[];
+  nurseName: string;
+  phone: string;
+  idCardFront: UploadFile[];
+  idCardBack: UploadFile[];
+  certificateImage: UploadFile[];
   skills: string[];
   serviceAreas: string[];
   selfIntroduction: string;
@@ -48,10 +48,14 @@ const Certification: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [nursingCertFiles, setNursingCertFiles] = useState<any[]>([]);
-  const [healthCertFiles, setHealthCertFiles] = useState<any[]>([]);
+  const [idCardFrontFiles, setIdCardFrontFiles] = useState<any[]>([]);
+  const [idCardBackFiles, setIdCardBackFiles] = useState<any[]>([]);
+  const [certificateImageFiles, setCertificateImageFiles] = useState<any[]>([]);
   const [certificationStatus, setCertificationStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
+  const [submitTime, setSubmitTime] = useState('');
+  const [reviewTime, setReviewTime] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
 
   // 查询认证状态
   const checkCertificationStatus = async () => {
@@ -69,6 +73,17 @@ const Certification: React.FC = () => {
         const latestCert = list[0];
         console.log('最新认证记录:', latestCert);
         setCertificationStatus(latestCert.status);
+
+        // 设置时间信息
+        if (latestCert.submitTime) {
+          setSubmitTime(new Date(latestCert.submitTime).toLocaleString('zh-CN'));
+        }
+        if (latestCert.reviewTime) {
+          setReviewTime(new Date(latestCert.reviewTime).toLocaleString('zh-CN'));
+        }
+        if (latestCert.rejectReason) {
+          setRejectReason(latestCert.rejectReason);
+        }
 
         switch (latestCert.status) {
           case 'approved':
@@ -122,7 +137,7 @@ const Certification: React.FC = () => {
       content: (
         <Card size="small" style={{ marginBottom: 16 }}>
           <Form.Item
-            name="realName"
+            name="nurseName"
             label="真实姓名"
             rules={[{ required: true, message: '请输入真实姓名' }]}
           >
@@ -134,15 +149,15 @@ const Certification: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            name="idNumber"
-            label="身份证号"
+            name="phone"
+            label="联系电话"
             rules={[
-              { required: true, message: '请输入身份证号' },
-              { pattern: /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/, message: '请输入正确的身份证号' }
+              { required: true, message: '请输入联系电话' },
+              { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码' }
             ]}
           >
             <Input
-              placeholder="请输入18位身份证号"
+              placeholder="请输入11位手机号码"
               size="large"
               style={{ borderRadius: '8px' }}
             />
@@ -151,12 +166,12 @@ const Certification: React.FC = () => {
       )
     },
     {
-      title: '资质证明',
+      title: '证件上传',
       icon: <FileTextOutlined />,
       content: (
         <Card size="small" style={{ marginBottom: 16 }}>
           <Alert
-            message="资质证明要求"
+            message="证件上传要求"
             description="请上传清晰的证件照片，支持jpg、png格式，文件大小不超过5MB"
             type="info"
             showIcon
@@ -166,8 +181,9 @@ const Certification: React.FC = () => {
           <Row gutter={[16, 16]}>
             <Col span={12}>
               <Form.Item
-                name="nursingCert"
-                label="护理证"
+                name="idCardFront"
+                label="身份证正面"
+                rules={[{ required: true, message: '请上传身份证正面' }]}
               >
                 <Upload
                   listType="picture-card"
@@ -175,24 +191,25 @@ const Certification: React.FC = () => {
                   beforeUpload={() => false}
                   accept=".jpg,.jpeg,.png"
                   action=""
-                  fileList={nursingCertFiles}
+                  fileList={idCardFrontFiles}
                   onChange={({ fileList }) => {
-                    console.log('nursingCert onChange fileList:', fileList);
-                    setNursingCertFiles(fileList);
+                    console.log('idCardFront onChange fileList:', fileList);
+                    setIdCardFrontFiles(fileList);
                   }}
                   style={{ width: '100%' }}
                 >
                   <div style={{ padding: '20px 0' }}>
                     <UploadOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
-                    <div style={{ marginTop: 8, color: '#666' }}>上传护理证</div>
+                    <div style={{ marginTop: 8, color: '#666' }}>上传身份证正面</div>
                   </div>
                 </Upload>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name="healthCert"
-                label="健康证"
+                name="idCardBack"
+                label="身份证背面"
+                rules={[{ required: true, message: '请上传身份证背面' }]}
               >
                 <Upload
                   listType="picture-card"
@@ -200,16 +217,45 @@ const Certification: React.FC = () => {
                   beforeUpload={() => false}
                   accept=".jpg,.jpeg,.png"
                   action=""
-                  fileList={healthCertFiles}
+                  fileList={idCardBackFiles}
                   onChange={({ fileList }) => {
-                    console.log('healthCert onChange fileList:', fileList);
-                    setHealthCertFiles(fileList);
+                    console.log('idCardBack onChange fileList:', fileList);
+                    setIdCardBackFiles(fileList);
                   }}
                   style={{ width: '100%' }}
                 >
                   <div style={{ padding: '20px 0' }}>
                     <UploadOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
-                    <div style={{ marginTop: 8, color: '#666' }}>上传健康证</div>
+                    <div style={{ marginTop: 8, color: '#666' }}>上传身份证背面</div>
+                  </div>
+                </Upload>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+            <Col span={24}>
+              <Form.Item
+                name="certificateImage"
+                label="资质证书"
+                rules={[{ required: true, message: '请上传资质证书' }]}
+              >
+                <Upload
+                  listType="picture-card"
+                  maxCount={1}
+                  beforeUpload={() => false}
+                  accept=".jpg,.jpeg,.png"
+                  action=""
+                  fileList={certificateImageFiles}
+                  onChange={({ fileList }) => {
+                    console.log('certificateImage onChange fileList:', fileList);
+                    setCertificateImageFiles(fileList);
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  <div style={{ padding: '20px 0' }}>
+                    <UploadOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+                    <div style={{ marginTop: 8, color: '#666' }}>上传资质证书</div>
                   </div>
                 </Upload>
               </Form.Item>
@@ -334,73 +380,78 @@ const Certification: React.FC = () => {
     console.log('Form instance values:', form.getFieldsValue());
     setLoading(true);
     try {
-      const uploadOnce = async (file: File): Promise<string> => {
-        const formData = new FormData();
-        formData.append('image', file);
-        try {
-          const resp: any = await request.post('/upload/image', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
-          console.log('Upload success response:', resp);
-          console.log('Upload response data:', resp.data);
-          if (!resp.data || !resp.data.url) {
-            console.error('Upload response missing URL:', resp);
-            message.error('文件上传失败：响应中缺少URL');
-            return '';
-          }
-          return resp.data.url as string;
-        } catch (error) {
-          console.error('文件上传失败:', error);
-          message.error('文件上传失败，请重试');
-          return '';
-        }
+      // 将文件读取为 base64(data URL)
+      const readAsDataURL = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
       };
 
-      const pickFile = async (list: any[] | undefined): Promise<File | null> => {
+      const blobToDataURL = (blob: Blob): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      // 统一返回 base64(data URL)
+      const pickFile = async (list: any[] | undefined): Promise<string> => {
         console.log('pickFile input:', list);
-        if (!list || list.length === 0) return null;
+        if (!list || list.length === 0) return '';
         const item: any = list[0];
         console.log('pickFile item:', item);
         console.log('item.originFileObj:', item.originFileObj);
         console.log('item.thumbUrl:', item.thumbUrl);
         console.log('item.url:', item.url);
-        if (item.originFileObj) return item.originFileObj as File;
+        if (item.originFileObj) return await readAsDataURL(item.originFileObj as File);
         const dataUrl: string | undefined = item.thumbUrl || item.url;
         if (dataUrl && dataUrl.startsWith('data:')) {
+          return dataUrl;
+        }
+        if (dataUrl) {
           const res = await fetch(dataUrl);
           const blob = await res.blob();
-          return new File([blob], item.name || 'upload.png', { type: blob.type || 'image/png' });
+          return await blobToDataURL(blob);
         }
         console.log('pickFile failed - no valid file data found');
-        return null;
+        return '';
       };
 
-      const nursingFile = await pickFile(nursingCertFiles);
-      const healthFile = await pickFile(healthCertFiles);
-      let nursingUrl = '';
-      let healthUrl = '';
+      const idCardFrontUrl = await pickFile(idCardFrontFiles);
+      const idCardBackUrl = await pickFile(idCardBackFiles);
+      const certificateImageUrl = await pickFile(certificateImageFiles);
 
-      if (nursingFile) {
-        nursingUrl = await uploadOnce(nursingFile);
-        console.log('Generated nursingUrl:', nursingUrl);
-      }
+      // 生成证书编号
+      const generateCertificateNo = () => {
+        const year = new Date().getFullYear();
+        const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        return `RN-${year}-${randomNum}`;
+      };
 
-      if (healthFile) {
-        healthUrl = await uploadOnce(healthFile);
-        console.log('Generated healthUrl:', healthUrl);
-      }
+      const generatedCertNo = generateCertificateNo();
 
       const payload = {
-        nurseName: values.realName,
-        idcard: values.idNumber,
-        certificateImage: nursingUrl,
-        idCardFront: healthUrl,
-        certificateType: 'both',
+        nurseName: values.nurseName,
+        phone: values.phone,
+        idCardFront: idCardFrontUrl,
+        idCardBack: idCardBackUrl,
+        certificateImage: certificateImageUrl,
+        certificateType: '护理资格证',
+        certificateNo: generatedCertNo,
       };
 
+      console.log('=== PAYLOAD DEBUG ===');
+      console.log('values.nurseName:', values.nurseName);
+      console.log('values.phone:', values.phone);
       console.log('Final payload for /approves:', payload);
+      console.log('JSON payload:', JSON.stringify(payload, null, 2));
 
-      await request.post('/approves', payload);
+      await ApproveService.create(payload);
 
       message.success('认证信息已提交，请等待审核');
       setSubmitted(true);
@@ -416,18 +467,15 @@ const Certification: React.FC = () => {
 
   const nextStep = () => {
     const stepFields: (keyof CertificationForm)[][] = [
-      ['realName', 'idNumber'],
-      [],
+      ['nurseName', 'phone'],
+      ['idCardFront', 'idCardBack', 'certificateImage'],
       ['skills'],
       ['serviceAreas'],
       ['selfIntroduction']
     ];
     const fields = stepFields[currentStep] as any;
 
-    if (currentStep === 1) {
-      setCurrentStep(currentStep + 1);
-      return;
-    }
+
 
     form.validateFields(fields)
       .then(() => {
@@ -488,11 +536,23 @@ const Certification: React.FC = () => {
             <div style={{ fontSize: '16px', marginBottom: '8px' }}>
               当前状态：<strong>{statusMessage}</strong>
             </div>
-            {certificationStatus === 'pending' && (
-              <div style={{ color: '#666' }}>预计完成时间：3-5个工作日</div>
+            {submitTime && (
+              <div style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
+                提交时间：{submitTime}
+              </div>
             )}
-            {certificationStatus === 'rejected' && (
-              <div style={{ color: '#666' }}>拒绝原因：请联系客服了解详情</div>
+            {reviewTime && (
+              <div style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
+                审核时间：{reviewTime}
+              </div>
+            )}
+            {certificationStatus === 'pending' && (
+              <div style={{ color: '#666', fontSize: '14px' }}>预计完成时间：3-5个工作日</div>
+            )}
+            {certificationStatus === 'rejected' && rejectReason && (
+              <div style={{ color: '#ff4d4f', fontSize: '14px', marginTop: '8px' }}>
+                拒绝原因：{rejectReason}
+              </div>
             )}
           </Card>
         </div>
@@ -545,50 +605,58 @@ const Certification: React.FC = () => {
               <div style={{ fontSize: '16px', marginBottom: '8px' }}>
                 <strong>{statusMessage}</strong>
               </div>
+              {submitTime && (
+                <div style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
+                  提交时间：{submitTime}
+                </div>
+              )}
+              {reviewTime && (
+                <div style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
+                  审核时间：{reviewTime}
+                </div>
+              )}
               {certificationStatus === 'pending' && (
                 <div style={{ color: '#666', fontSize: '14px' }}>
                   预计完成时间：3-5个工作日
                 </div>
               )}
-              {certificationStatus === 'rejected' && (
-                <div style={{ color: '#666', fontSize: '14px' }}>
-                  如有疑问，请联系客服
+              {certificationStatus === 'rejected' && rejectReason && (
+                <div style={{ color: '#ff4d4f', fontSize: '14px', marginTop: '8px' }}>
+                  拒绝原因：{rejectReason}
                 </div>
               )}
             </Card>
           )}
 
-          <Steps
-            current={currentStep}
-            style={{ marginBottom: '32px' }}
-            progressDot
-            size="small"
-          >
-            {steps.map((step, index) => (
-              <Steps.Step
-                key={index}
-                title={step.title}
-                icon={step.icon}
-                style={{
-                  fontSize: '14px',
-                  fontWeight: currentStep === index ? 'bold' : 'normal'
-                }}
-              />
-            ))}
-          </Steps>
+          <div style={{ marginBottom: '24px' }}>
+            <HorizontalStepper
+              steps={steps.map(s => ({ title: s.title }))}
+              current={currentStep}
+              visibleCount={3}
+            />
+          </div>
 
           <Form
             form={form}
             layout="vertical"
             onFinish={handleSubmit}
             initialValues={{
-              realName: '',
-              idNumber: '',
+              nurseName: '',
+              phone: '',
               skills: [],
               serviceAreas: []
             }}
           >
-            {steps[currentStep].content}
+            {steps.map((step, index) => (
+              <div
+                key={index}
+                style={{
+                  display: index === currentStep ? 'block' : 'none'
+                }}
+              >
+                {step.content}
+              </div>
+            ))}
 
             <div style={{
               display: 'flex',
@@ -628,7 +696,17 @@ const Certification: React.FC = () => {
               ) : (
                 <Button
                   type="primary"
-                  htmlType="submit"
+                  onClick={() => {
+                    // 手动提交以确保获取所有表单数据
+                    form.validateFields()
+                      .then((allValues) => {
+                        console.log('All form values:', allValues);
+                        handleSubmit(allValues as CertificationForm);
+                      })
+                      .catch((error) => {
+                        console.error('表单验证失败:', error);
+                      });
+                  }}
                   loading={loading}
                   size="large"
                   style={{

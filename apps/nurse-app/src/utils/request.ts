@@ -44,16 +44,17 @@ request.interceptors.request.use(
   (config) => {
     // 添加token到请求头
     const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const hasExplicitAuth = !!(config.headers && (config.headers as any)['Authorization']);
+    if (!hasExplicitAuth && token) {
+      (config.headers as any).Authorization = `Bearer ${token}`;
     }
-    
+
     // 添加用户角色信息
     const userRole = localStorage.getItem('userRole');
     if (userRole) {
-      config.headers['X-User-Role'] = userRole;
+      (config.headers as any)['X-User-Role'] = userRole;
     }
-    
+
     return config;
   },
   (error) => {
@@ -65,67 +66,76 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     const { data } = response;
-    
+    const cfg = (response.config || {}) as RequestConfig;
+    const shouldShowError = cfg.showError !== false;
+    const shouldShowSuccess = cfg.showSuccess === true;
+
     // 处理业务错误
     if (data.code !== 200) {
-      // 处理特定错误码
-      switch (data.code) {
-        case 401:
-          // 未授权，清除token并跳转到登录页
-          localStorage.removeItem('token');
-          localStorage.removeItem('userRole');
-          localStorage.removeItem('userInfo');
-          window.location.href = '/login';
-          break;
-        case 403:
-          // 权限不足
-          message.error('权限不足，无法访问该功能');
-          break;
-        case 404:
-          message.error('请求的资源不存在');
-          break;
-        case 500:
-          message.error('服务器内部错误');
-          break;
-        default:
-          message.error(data.message || '请求失败');
+      if (shouldShowError) {
+        switch (data.code) {
+          case 401:
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userInfo');
+            window.location.href = '/login';
+            break;
+          case 403:
+            message.error('权限不足，无法访问该功能');
+            break;
+          case 404:
+            message.error('请求的资源不存在');
+            break;
+          case 500:
+            message.error('服务器内部错误');
+            break;
+          default:
+            message.error(data.message || '请求失败');
+        }
       }
       return Promise.reject(new Error(data.message || '请求失败'));
     }
-    
+
+    if (shouldShowSuccess && data?.message) {
+      message.success(data.message);
+    }
     return data;
   },
   (error) => {
+    const cfg = (error?.config || {}) as RequestConfig;
+    const shouldShowError = cfg.showError !== false;
+
     // 处理网络错误
     if (error.response) {
       const { status, data } = error.response;
-      
-      switch (status) {
-        case 401:
-          message.error('登录已过期，请重新登录');
-          localStorage.removeItem('token');
-          localStorage.removeItem('userRole');
-          localStorage.removeItem('userInfo');
-          window.location.href = '/login';
-          break;
-        case 403:
-          message.error('权限不足');
-          break;
-        case 404:
-          message.error('请求的资源不存在');
-          break;
-        case 500:
-          message.error('服务器内部错误');
-          break;
-        default:
-          message.error(data?.message || '请求失败');
+      if (shouldShowError) {
+        switch (status) {
+          case 401:
+            message.error('登录已过期，请重新登录');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userInfo');
+            window.location.href = '/login';
+            break;
+          case 403:
+            message.error('权限不足');
+            break;
+          case 404:
+            message.error('请求的资源不存在');
+            break;
+          case 500:
+            message.error('服务器内部错误');
+            break;
+          default:
+            message.error(data?.message || '请求失败');
+        }
       }
     } else if (error.request) {
-      message.error('网络连接失败，请检查网络设置');
+      if (shouldShowError) message.error('网络连接失败，请检查网络设置');
     } else {
-      message.error('请求配置错误');
+      if (shouldShowError) message.error('请求配置错误');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -135,19 +145,19 @@ export const http = {
   get: <T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.get(url, config);
   },
-  
+
   post: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.post(url, data, config);
   },
-  
+
   put: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.put(url, data, config);
   },
-  
+
   patch: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.patch(url, data, config);
   },
-  
+
   delete: <T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> => {
     return request.delete(url, config);
   },

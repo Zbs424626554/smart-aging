@@ -12,7 +12,6 @@
 智慧养老综合服务平台是一个连接家庭用户（老人、家属）、护工（个人或机构）的桥梁，提供安全监控、服务匹配、支付保障，并由后台和AI进行支撑和优化。
 
 ### 🎯 核心目标
-
 - **安全监控**: 为老人提供一键紧急呼叫功能
 - **服务匹配**: 智能推荐合适的护工服务
 - **支付保障**: 安全的在线支付和资金管理
@@ -22,7 +21,6 @@
 ## 🏗️ 技术架构
 
 ### 前端技术栈
-
 - **React 18+** - 用户端应用框架
 - **Vue 3.4.0** - 管理后台框架
 - **TypeScript 5.x** - 类型安全
@@ -32,7 +30,6 @@
 - **Axios** - HTTP客户端
 
 ### 后端技术栈
-
 - **Node.js** - 运行环境
 - **Express.js** - Web框架
 - **TypeScript** - 类型安全
@@ -41,7 +38,6 @@
 - **JWT + Cookie** - 身份认证（支持多端口 SSO）
 
 ### 开发工具
-
 - **ESLint** - 代码规范
 - **Prettier** - 代码格式化
 - **Husky** - Git Hooks
@@ -64,13 +60,11 @@ smart-aging/
 ## 🚀 快速开始
 
 ### 环境要求
-
 - **Node.js**: 18.0.0 或更高版本
 - **npm**: 9.0.0 或更高版本
 - **MongoDB**: 4.4 或更高版本
 
 ### 安装依赖
-
 ```bash
 # 克隆项目
 git clone <repository-url>
@@ -80,10 +74,9 @@ npm run install:all
 ```
 
 ### 启动开发环境
-
 ```bash
 # 启动后端服务
-npm run dev:server
+npm run start:server
 # 启动前端应用（分别启动）
 npm run dev:elderly    # 老人端 http://localhost:5173
 npm run dev:family     # 家属端 http://localhost:5174
@@ -92,13 +85,12 @@ npm run dev:admin      # 管理后台 http://localhost:5176
 ```
 
 ### 端口分配
-
-| 应用     | 端口 | 访问地址              |
-| -------- | ---- | --------------------- |
+| 应用 | 端口 | 访问地址 |
+|------|------|----------|
 | 后端服务 | 3001 | http://localhost:3001 |
-| 老人端   | 5173 | http://localhost:5173 |
-| 家属端   | 5174 | http://localhost:5174 |
-| 护工端   | 5175 | http://localhost:5175 |
+| 老人端 | 5173 | http://localhost:5173 |
+| 家属端 | 5174 | http://localhost:5174 |
+| 护工端 | 5175 | http://localhost:5175 |
 | 管理后台 | 5176 | http://localhost:5176 |
 
 ## 🎨 主要功能特性
@@ -110,21 +102,18 @@ npm run dev:admin      # 管理后台 http://localhost:5176
 - **健康管理、服务匹配、订单管理、紧急呼叫等核心业务功能**。
 
 ## 🔐 认证与权限
-
 - **JWT + Cookie**：后端登录成功后将 token 写入 Cookie，前端 axios 配置 `withCredentials: true`，所有请求自动携带 Cookie。
 - **角色权限**：elderly/family/nurse/admin
 - **路由守卫**：基于角色的路由保护
 - **API权限**：中间件验证 token 和角色
 
 ## 📚 相关文档
-
 - [前端架构文档](./docs/frontend-architecture.md)
 - [API接口文档](./docs/api-documentation.md)
 - [数据库设计文档](./docs/database-design.md)
 - [API接口摘要](./docs/api-summary.md)
 
 ## 🧪 测试
-
 - **单元测试**: 组件、服务、工具函数测试
 - **集成测试**: 路由、权限、API测试
 
@@ -138,4 +127,4 @@ npm run dev:admin      # 管理后台 http://localhost:5176
 
 ---
 
-**智慧养老综合服务平台** - 让科技温暖每一个家庭 🏠❤️
+**智慧养老综合服务平台** - 让科技温暖每一个家庭 🏠❤️ 

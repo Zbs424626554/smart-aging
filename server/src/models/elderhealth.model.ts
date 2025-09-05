@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document } from "mongoose";
-// 老人健康档案
 
 export interface IElderHealthArchive extends Document {
   elderID: mongoose.Types.ObjectId;
@@ -15,11 +14,12 @@ export interface IElderHealthArchive extends Document {
   medicals?: string[];
   allergies?: string[];
   useMedication?: Array<{ name: string; time: string }>;
-  heartRate?: number;
-  bloodPressure?: string;
-  temperature?: number;
-  oxygenLevel?: number;
-  bloodSugar?: number;
+  // 生命体征（可选）
+  bloodPressure?: string; // e.g. "120/80"
+  bloodSugar?: number;    // mmol/L
+  heartRate?: number;     // bpm
+  oxygenLevel?: number;   // %
+  temperature?: number;   // ℃
 }
 
 const elderHealthArchiveSchema = new Schema(
@@ -70,30 +70,12 @@ const elderHealthArchiveSchema = new Schema(
       required: false,
       default: [],
     },
-    heartRate: {
-      type: Number,
-      min: 0,
-      max: 300,
-    },
-    bloodPressure: {
-      type: String,
-      match: /^\d+\/\d+$/,
-    },
-    temperature: {
-      type: Number,
-      min: 30,
-      max: 45,
-    },
-    oxygenLevel: {
-      type: Number,
-      min: 0,
-      max: 100,
-    },
-    bloodSugar: {
-      type: Number,
-      min: 0,
-      max: 50,
-    },
+    // 生命体征字段（允许为空）
+    bloodPressure: { type: String, required: false },
+    bloodSugar: { type: Number, required: false, min: 0, max: 50 },
+    heartRate: { type: Number, required: false, min: 0, max: 300 },
+    oxygenLevel: { type: Number, required: false, min: 0, max: 100 },
+    temperature: { type: Number, required: false, min: 30, max: 45 },
   },
   {
     timestamps: true,

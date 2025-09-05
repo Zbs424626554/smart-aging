@@ -1,20 +1,14 @@
-import mongoose, { Schema, Document } from "mongoose";
-import bcrypt from "bcryptjs";
-// 用户数据表
+import mongoose, { Schema, Document } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 // 用户接口
 export interface IUser extends Document {
   username: string;
   password: string;
   phone: string;
-  role: "elderly" | "family" | "nurse" | "admin";
+  role: 'elderly' | 'family' | 'nurse' | 'admin';
   avatar?: string;
   realname?: string;
-  friends?: Array<{
-    userId: mongoose.Types.ObjectId;
-    username: string;
-    relationship: string;
-  }>;
   status: boolean;
   createdTime: Date;
   lastLogin?: Date;
@@ -26,59 +20,46 @@ const userSchema = new Schema({
   username: {
     type: String,
     required: true,
-    unique: true,
+    unique: true
   },
   password: {
     type: String,
-    required: true,
+    required: true
   },
   phone: {
     type: String,
     required: true,
-    unique: true,
+    unique: true
   },
   role: {
     type: String,
     required: true,
-    enum: ["elderly", "family", "nurse", "admin"],
+    enum: ['elderly', 'family', 'nurse', 'admin']
   },
   avatar: {
     type: String,
-    default: "",
+    default: ''
   },
   realname: {
     type: String,
-    default: "",
-  },
-  friends: {
-    type: [
-      new Schema(
-        {
-          userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-          username: { type: String, required: true },
-          relationship: { type: String, required: true },
-        },
-        { _id: false }
-      ),
-    ],
-    default: [],
+    default: ''
   },
   status: {
     type: Boolean,
-    default: true,
+    default: true
   },
   createdTime: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   lastLogin: {
-    type: Date,
-  },
+    type: Date
+  }
 });
 
 // 密码加密中间件
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
 
   try {
     const salt = await bcrypt.genSalt(10);
@@ -90,10 +71,8 @@ userSchema.pre("save", async function (next) {
 });
 
 // 密码比较方法
-userSchema.methods.comparePassword = async function (
-  candidatePassword: string
-): Promise<boolean> {
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = mongoose.model<IUser>("User", userSchema);
+export const User = mongoose.model<IUser>('User', userSchema); 

@@ -85,3 +85,5 @@ coverage/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+server/.env
+server/.env.*
