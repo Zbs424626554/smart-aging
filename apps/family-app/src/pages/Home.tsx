@@ -4,7 +4,7 @@ import styles from './Home.module.css';
 import {Popup, Space, Button,Form ,Input } from 'antd-mobile'
 import { EyeInvisibleOutline, EyeOutline } from 'antd-mobile-icons'
 import axios from 'axios';
-axios.defaults.baseURL='http://localhost:3001'
+// axios.defaults.baseURL='http://localhost:3001'
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const [visible,setvisible]=useState(false)
@@ -80,7 +80,7 @@ const Home: React.FC = () => {
     //   content: <pre>{JSON.stringify(values, null, 2)}</pre>,
     // })
     console.log(JSON.stringify(values));
-    let res = await axios.post("/api/users/adduser", values, {
+    let res = await axios.post("http://localhost:3001/api/users/adduser", values, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -119,7 +119,7 @@ const Home: React.FC = () => {
             <div
               className={styles.functionIcon}
               style={{
-                background: action.title == "健康预警" ? "red" : "#0077C2",
+                background: action.title == "健康预警" ? "#FF6B6B" : "#0077C2",
               }}
             >
               {action.icon}
@@ -146,7 +146,7 @@ const Home: React.FC = () => {
             setvisible(false);
           }}
           // closeOnMaskClick={false}
-          bodyStyle={{ height: "50vh" }}
+          bodyStyle={{ height: "70vh" }}
         >
           <Form
             name="form"

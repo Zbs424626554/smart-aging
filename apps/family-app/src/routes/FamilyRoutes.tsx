@@ -19,6 +19,8 @@ import Payment from "../pages/Payment";
 import Refund from "../pages/Refund";
 import Message from "../pages/Message";
 import Chat from "../pages/Chat";
+import Gozhifu from "../pages/Gozhifu";
+import Donezhifu from "../pages/Donezhifu";
 
 // 根路由重定向组件
 const RootRedirect: React.FC = () => {
@@ -60,6 +62,8 @@ const FamilyRoutes: React.FC = () => {
         {/* 主要标签页路由 */}
         <Route path="health" element={<Health />} />
         <Route path="nurses" element={<Nurses />} />
+        <Route path="gozhifu" element={<Gozhifu />} />
+        <Route path="donezhifu" element={<Donezhifu />} />
         <Route path="orders" element={<Orders />} />
         <Route path="payment" element={<Payment />} />
         <Route path="refund" element={<Refund />} />

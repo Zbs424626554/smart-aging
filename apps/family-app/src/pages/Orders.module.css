@@ -1,305 +1,138 @@
 .orders {
-  background: #f5f7fb;
+  background: #f5f5f5;
   min-height: 100vh;
-  width: 100;
 }
 
 .pageHeader {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: #0b6cff;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  background: #1677ff;
   color: #fff;
-  padding: 12px 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.headerTitle {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-/* tabs */
 .tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  padding: 12px 16px;
-  background: #fff;
-  border-bottom: 1px solid #eef0f5;
-}
-
-.tabBtn {
-  height: 34px;
-  min-width: 72px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: #f2f5fa;
-  border: 1px solid transparent;
-  font-size: 14px;
-  color: #333;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  outline: none;
-  box-shadow: none;
-  -webkit-appearance: none;
-  appearance: none;
-  -webkit-tap-highlight-color: transparent;
+  background: #fff;
+  border-bottom: 1px solid #eee;
 }
-
-.tabBtn:focus,
-.tabBtn:focus-visible {
-  outline: none;
-  box-shadow: none;
+.tabBtn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
 }
-
 .tabActive {
-  color: #0b6cff;
-  background: #eaf2ff;
-  border-color: #0b6cff;
+  color: #1677ff;
+  border-bottom: 2px solid #1677ff;
+  font-weight: bold;
 }
 
-/* list */
 .ordersList {
-  padding: 12px 0;
+  padding: 12px;
 }
 
+/* 卡片 */
 .orderCard {
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(13, 39, 80, 0.06);
-  margin-bottom: 14px;
-  overflow: hidden;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
+/* 头部 */
 .cardHeader {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid #f2f2f2;
+  align-items: center;
+  margin-bottom: 8px;
 }
-
+.leftMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .orderNo {
-  color: #556070;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
 }
-
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* avatar + meta */
-.nurseRow {
-  display: flex;
-  align-items: center;
-  padding: 12px 14px 4px;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #69b3ff, #2d7cff);
-  color: #fff;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 10px;
-}
-
-.nurseMeta {
-  flex: 1;
-}
-
-.nurseName {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1f2a37;
-}
-
-.serviceMeta {
+.createdAt {
   font-size: 12px;
-  color: #6b7280;
-  margin-top: 2px;
+  color: #999;
 }
-
-.amountBox {
-  text-align: right;
+.rightMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
 .amount {
-  color: #ff4d4f;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: bold;
+  color: #ff4d4f;
 }
 
-/* progress */
-.progressBlock {
-  padding: 10px 14px;
+/* 内容 */
+.cardBody {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+  margin-top: 6px;
+  font-size: 14px;
+  color: #444;
 }
-
-.progressHeader {
-  display: flex;
-  justify-content: space-between;
-  color: #6b7280;
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-.etaText {
-  color: #9aa3af;
-}
-
-.progressBar {
-  height: 6px;
-  background: #eef2f7;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.progressInner {
-  height: 100%;
-  background: linear-gradient(90deg, #2d7cff, #36d1dc);
-}
-
-/* info */
-.infoRow {
-  padding: 8px 14px;
-}
-
 .infoItem {
-  color: #4b5563;
-  font-size: 13px;
   margin: 6px 0;
 }
 
-.infoItem span {
-  color: #98a2b3;
-  margin-right: 6px;
-}
-
-/* chips */
-.chipsRow {
-  padding: 6px 14px 0;
-}
-
-.statusChip,
-.payChip {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 20px;
+/* 状态标签 */
+.statusChip {
+  padding: 2px 8px;
+  border-radius: 12px;
   font-size: 12px;
-  margin-right: 6px;
 }
-
+.status_published {
+  background: #f0f0f0;
+  color: #999;
+}
+.status_assigned {
+  background: #e6f4ff;
+  color: #1677ff;
+}
 .status_in_progress {
-  background: #eaf2ff;
-  color: #0b6cff;
-}
-
-.status_completed {
-  background: #e8f6ef;
-  color: #16a34a;
-}
-
-.status_cancelled {
-  background: #fdecec;
-  color: #ef4444;
-}
-
-.pay_unpaid {
   background: #fff7e6;
-  color: #d97706;
+  color: #fa8c16;
+}
+.status_completed {
+  background: #f6ffed;
+  color: #52c41a;
 }
 
-.pay_paid {
-  background: #e8f6ef;
-  color: #16a34a;
-}
-
-.pay_refunded {
-  background: #f1f5f9;
-  color: #475569;
-}
-
-/* actions */
-.actions {
-  padding: 10px 14px 14px;
+/* 底部 */
+.cardFooter {
   display: flex;
-  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
-
-.btn {
-  flex: 1;
-  height: 36px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.btnGhost {
+.detailBtn {
+  border: 1px solid #1677ff;
   background: #fff;
-  border: 1px solid #dbe3ee;
-  color: #1f2a37;
+  color: #1677ff;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-
-.btnPrimary {
-  background: #0b6cff;
-  border: none;
+.detailBtn:hover {
+  background: #1677ff;
   color: #fff;
 }
 
-.btnDanger {
-  background: #ef4444;
-  border: none;
-  color: #fff;
-}
-
-/* empty */
 .emptyBox {
   text-align: center;
-  color: #94a3b8;
-  padding: 40px 0;
-}
-
-.fabCreateOrder {
-  position: fixed;
-  right: 16px;
-  bottom: 80px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #0b6cff;
-  color: #fff;
-  border: none;
-  box-shadow: 0 8px 22px rgba(11, 108, 255, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  z-index: 20;
-}
-
-.fabCreateOrder:active {
-  background: #005ce6;
-}
-
-.fabCreateOrder i {
-  pointer-events: none;
-}
-
-@media (max-width: 375px) {
-  .tabs {
-    gap: 8px;
-  }
-
-  .btn {
-    height: 34px;
-    font-size: 13px;
-  }
+  color: #aaa;
+  padding: 40px;
 }

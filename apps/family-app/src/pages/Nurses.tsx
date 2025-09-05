@@ -1,73 +1,192 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import type { RefObject } from "react";
 import { useNavigate } from 'react-router-dom';
 import styles from './Nurses.module.css';
+import {ElderlyService} from '../services/elderly.service'
+import type { ElderlyUser } from "../services/elderly.service";
+import {
+  Form,
+  Input,
+  Button,
+  Dialog,
+  TextArea,
+  DatePicker,
+  Selector,
+} from 'antd-mobile'
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
-interface NurseItem {
-  id: string;
+dayjs.extend(isSameOrBefore);
+import type { DatePickerRef } from 'antd-mobile/es/components/date-picker'
+import axios from "axios";
+axios.defaults.baseURL='http://localhost:3001/api'
+interface IService extends Document {
+  _id:string;
   name: string;
-  rating: number; // 1-5
-  price: number; // 每小时
-  specialties: string[];
-  years: number; // 从业年限
-  available: string; // 可约时间描述
+  price: number;
+  priceUnit: string;
+  description: string;
+  category: string;
+  subcategory?: string;
+  status: 'active' | 'disabled';
+  requirements?: string[];
+  imageUrl?: string;
+  createdBy?: string
+  updatedBy?:string
 }
+
 
 const Nurses: React.FC = () => {
   const navigate = useNavigate();
+  const [elderly,setelderly]=useState<ElderlyUser[]>([])
+  const [service,setservice]=useState<IService[]>([])
+  const [form]=Form.useForm()
+  const onFinish = (values: any) => {
+    console.log(values);
+    const newvalues={...values,elderlyId:values.elderlyId[0],serviceId:values.serviceId[0],userId:JSON.parse(localStorage.getItem('userInfo') as string)._id}
+    localStorage.setItem("orderInfo", JSON.stringify(newvalues));
+    navigate("/home/gozhifu");
+  }
 
-  // 模拟护工列表
-  const nurses: NurseItem[] = [
-    { id: 'n1', name: '王护士', rating: 4.8, price: 80, specialties: ['基础护理', '康复训练'], years: 5, available: '今天下午、明天全天' },
-    { id: 'n2', name: '李护士', rating: 4.9, price: 90, specialties: ['术后护理', '上门换药'], years: 7, available: '明天上午、后天下午' },
-    { id: 'n3', name: '张护士', rating: 4.6, price: 75, specialties: ['陪护照看', '基础康复'], years: 4, available: '工作日晚上、周末全天' },
-  ];
+  //获得绑定的老人
+  const getelder=async()=>{
+    let res=await ElderlyService.getElderlyList()
+    if(res.code==200){
+      console.log(res);
+      setelderly(res.data.list)
+    }else{
+      console.log('获取老人错误');
+    }
+  }
 
-  const bookNurse = (nurse: NurseItem) => {
-    // 进入既有的订单确认流程
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const orderData = {
-      nurseId: nurse.id,
-      nurseName: nurse.name,
-      serviceHours: 2,
-      serviceDate: dateStr,
-      serviceTime: '15:00-17:00',
-      requirements: '基础照护',
-      address: '北京市朝阳区某小区 1-101',
-      price: nurse.price,
-      totalAmount: nurse.price * 2,
-      nurseInfo: { rating: nurse.rating, specialties: nurse.specialties },
-    };
-    navigate('/order-confirm', { state: { orderData } });
-  };
+  //获取服务表数据
+  const getservice=async()=>{
+    let res=await axios.get('/service/getService')
+    if(res.data.code==200){
+      setservice(res.data.list)
+    }else{
+      console.log('获取服务错误');
+      
+    }
+  }
+
+  useEffect(()=>{
+    getelder()
+    getservice()
+  },[])
 
   return (
     <div className={styles.nurses}>
-      <div className={styles.header}>预约护工</div>
+      <div className={styles.header}>发布需求</div>
+      <Form
+        layout='horizontal'
+        onFinish={onFinish}
+        footer={
+          <Button block type='submit' color='primary' size='large'>
+            去支付
+          </Button>
+        }
+        form={form}
+        onValuesChange={(changedValues, allValues)=>{
+          
+          if(changedValues.serviceId){
+            console.log(1,changedValues.serviceId);
+            
+            const info=service.find(i=>i._id===changedValues.serviceId[0])
+            form.setFieldValue('price',info?.price||'')
+          }
+        }}
+      >
+        <Form.Item
+          name='elderlyId'
+          label='老人选择'
+          rules={[{ required: true, message: '请选择需要的老人' }]}
+        >
+          <Selector
+            style={{width:'180px'}}
+            columns={2}
+            options={elderly.map(i=>({label:i.username,value:i.id}))}
+          />
+        </Form.Item>
 
-      <div className={styles.list}>
-        {nurses.map(n => (
-          <div key={n.id} className={styles.card}>
-            <div className={styles.avatar}>护</div>
-            <div className={styles.meta}>
-              <div className={styles.topRow}>
-                <div className={styles.name}>{n.name}</div>
-                <div className={styles.rating}>{n.rating.toFixed(1)}分</div>
-              </div>
-              <div className={styles.tags}>
-                {n.specialties.map((s, i) => (
-                  <span className={styles.tag} key={i}>{s}</span>
-                ))}
-              </div>
-              <div className={styles.bottomRow}>
-                <div className={styles.price}>¥{n.price}/小时 · {n.years}年经验</div>
-                <div className={styles.available}>{n.available}</div>
-              </div>
-            </div>
-            <button className={styles.bookBtn} onClick={() => bookNurse(n)}>预约</button>
+        <Form.Item label="服务类型">
+          <div style={{ overflowX: 'auto', maxWidth: '100vw' }}>
+            <Form.Item name="serviceId" noStyle>
+              <Selector
+                columns={service.length}
+                style={{ minWidth: 'max-content' }}
+                options={service.map(i => ({ label: i.name, value: i._id }))}
+              />
+            </Form.Item>
           </div>
-        ))}
-      </div>
+        </Form.Item>
+
+
+
+        <Form.Item
+          name='scheduledStartTime'
+          label='预约开始时间'
+          trigger='onConfirm'
+          onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
+            datePickerRef.current?.open()
+          }}
+          rules={[{ required: true, message: '请选择开始时间' }]}
+        >
+          <DatePicker>
+            {value =>
+              value ? dayjs(value).format('YYYY-MM-DD') : '请选择开始时间'
+            }
+          </DatePicker>
+        </Form.Item>
+
+        <Form.Item
+          name='scheduledEndTime'
+          label='预约结束时间'
+          trigger='onConfirm'
+          rules={[{ required: true, message: '请选择结束时间' },{
+            validator: async (_, value) => {
+              const startTime = form.getFieldValue('scheduledStartTime');
+              if (!startTime || !value) return Promise.resolve();
+      
+              const start = dayjs(startTime);
+              const end = dayjs(value);
+      
+              if (end.isSameOrBefore(start)) {
+                return Promise.reject(new Error('结束时间必须晚于开始时间'));
+              }
+              return Promise.resolve();
+            },
+          }]}
+          onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
+            datePickerRef.current?.open()
+          }}
+        >
+          <DatePicker>
+            {value =>
+              value ? dayjs(value).format('YYYY-MM-DD') : '请选择结束时间'
+            }
+          </DatePicker>
+        </Form.Item>
+
+        <Form.Item
+          name='price'
+          label='价格(元)'
+        >
+          <Input onChange={console.log} placeholder='请先选择服务' />
+        </Form.Item>
+
+
+
+        <Form.Item
+          name='address'
+          label='地址信息'
+          rules={[{ required: true, message: '地址信息不能为空不能为空' }]}
+        >
+          <Input placeholder='请输入地址信息' />
+        </Form.Item>
+      </Form>
+
+
     </div>
   );
 };
