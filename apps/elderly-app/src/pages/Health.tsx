@@ -6,6 +6,7 @@ import {
   ElderHealthService,
   type ElderHealthArchiveDto,
 } from "../services/elderhealth.service";
+import { UserService, type User } from "../services/user.service";
 import NavBal from "../components/NavBal";
 
 const Health: React.FC = () => {
@@ -305,79 +306,118 @@ const Health: React.FC = () => {
           }
           arrow={false}
           onClick={() => {
-            let username = archive?.emcontact?.username || "";
-            let realname = archive?.emcontact?.realname || "";
-            let phone = archive?.emcontact?.phone || "";
-            const isValidPhone = (p: string) =>
-              /^1[3-9]\d{9}$/.test(p.replace(/\D/g, ""));
-
             let handler: any;
-            handler = Dialog.show({
-              title: "紧急联系人",
-              content: (
+
+            const FamilyPicker: React.FC = () => {
+              const [keyword, setKeyword] = useState<string>("");
+              const [loadingList, setLoadingList] = useState<boolean>(false);
+              const [results, setResults] = useState<User[]>([]);
+
+              // 初次渲染不主动拉取，避免严格模式下二次调用；数据通过下方搜索 effect 触发
+
+              // 移除初次立即拉取，避免在 React StrictMode 下重复请求
+
+              useEffect(() => {
+                const timer = setTimeout(async () => {
+                  const kw = keyword.trim();
+                  if (!kw) {
+                    // 关键字为空：不请求，清空结果
+                    setResults([]);
+                    return;
+                  }
+                  setLoadingList(true);
+                  try {
+                    const resp = await UserService.searchUsers(kw, {
+                      role: "family",
+                      limit: 100,
+                    });
+                    setResults(resp?.list || []);
+                  } catch (err: any) {
+                    Toast.show({ content: err?.message || "搜索失败" });
+                  } finally {
+                    setLoadingList(false);
+                  }
+                }, 1500);
+                return () => clearTimeout(timer);
+              }, [keyword]);
+
+              const handlePick = async (u: User) => {
+                try {
+                  const updated = await ElderHealthService.saveEmergencyContact({
+                    // 仅使用 username 进行匹配，避免 realname 为空或 phone 格式差异导致匹配失败
+                    username: u.username,
+                  });
+                  setArchive(updated || null);
+                  Toast.show({ content: "已设置为紧急联系人" });
+                  if (handler) handler.close();
+                } catch (err: any) {
+                  Toast.show({ content: err?.message || "保存失败" });
+                }
+              };
+
+              return (
                 <div style={{ paddingTop: 12 }}>
                   <Space direction="vertical" style={{ width: "100%" }}>
                     <Input
                       style={{ fontSize: 18, height: 44 }}
-                      placeholder="用户名"
-                      defaultValue={username}
-                      onChange={(v) => (username = v)}
+                      placeholder="按用户名或手机号搜索"
+                      value={keyword}
+                      onChange={setKeyword}
                     />
-                    <Input
-                      style={{ fontSize: 18, height: 44 }}
-                      placeholder="真实姓名"
-                      defaultValue={realname}
-                      onChange={(v) => (realname = v)}
-                    />
-                    <Input
-                      style={{ fontSize: 18, height: 44 }}
-                      type="tel"
-                      placeholder="手机号"
-                      defaultValue={phone}
-                      onChange={(v) => (phone = v)}
-                    />
+                    <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
+                      {loadingList ? (
+                        <div style={{ display: "flex", justifyContent: "center", padding: 12 }}>
+                          <Spin />
+                        </div>
+                      ) : results.length === 0 ? (
+                        <div style={{ padding: 12 }}>
+                          <Empty description="暂无数据" />
+                        </div>
+                      ) : (
+                        results.map((u) => (
+                          <div
+                            key={u.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              padding: "10px 4px",
+                              borderBottom: "1px solid #f0f0f0",
+                            }}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                                {u.realname || u.username}
+                              </div>
+                              <div style={{ fontSize: 14, color: "#666" }}>
+                                {u.username} · {u.phone || "无手机号"}
+                              </div>
+                            </div>
+                            <Button
+                              size="small"
+                              color="primary"
+                              onClick={() => handlePick(u)}
+                              style={{ height: 34, padding: "0 12px", fontSize: 14, borderRadius: 16 }}
+                            >
+                              选择
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </Space>
                 </div>
-              ),
-              closeOnMaskClick: false,
+              );
+            };
+
+            handler = Dialog.show({
+              title: "选择紧急联系人",
+              content: <FamilyPicker />,
+              closeOnMaskClick: true,
               actions: [
-                {
-                  key: "cancel",
-                  text: "取消",
-                  onClick: () => {
-                    Toast.show({ content: "已取消" });
-                    handler.close();
-                  },
-                },
-                {
-                  key: "ok",
-                  text: "保存",
-                  bold: true,
-                  onClick: () => {
-                    const cleanPhone = phone.replace(/\D/g, "");
-                    if (phone && !isValidPhone(phone)) {
-                      Toast.show({ content: "手机号格式不正确" });
-                      return;
-                    }
-                    // 调用后端保存
-                    ElderHealthService.saveEmergencyContact({
-                      username: username?.trim(),
-                      realname: realname?.trim(),
-                      phone: cleanPhone,
-                    })
-                      .then((archiveData) => {
-                        setArchive(archiveData || null);
-                        Toast.show({ content: "已保存" });
-                        handler.close();
-                      })
-                      .catch((err) => {
-                        Toast.show({
-                          content: (err?.message as string) || "保存失败",
-                        });
-                      });
-                  },
-                },
+                { key: "close", text: "关闭", onClick: () => handler.close() },
               ],
+              style: { "--min-width": "86vw", "--max-width": "92vw" } as any,
             });
           }}
         >
