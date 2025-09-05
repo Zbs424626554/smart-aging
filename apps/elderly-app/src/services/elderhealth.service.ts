@@ -40,6 +40,16 @@ export class ElderHealthService {
       "/elderhealth/medication/delete",
       { name, time }
     );
+    // 广播档案更新事件，便于全局用药提醒组件即时刷新
+    try {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("elderhealth:archiveUpdated", { detail: data })
+        );
+      }
+    } catch {
+      // ignore
+    }
     return data as ElderHealthArchiveDto;
   }
 
@@ -118,6 +128,16 @@ export class ElderHealthService {
       "/elderhealth/medication",
       { name, times: payloadTimes }
     );
+    // 广播档案更新事件，便于全局用药提醒组件即时刷新
+    try {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("elderhealth:archiveUpdated", { detail: data })
+        );
+      }
+    } catch {
+      // ignore
+    }
     return data as ElderHealthArchiveDto;
   }
 

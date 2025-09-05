@@ -10,10 +10,10 @@
   ],
   "scripts": {
     "install:all": "npm install",
-    "dev:a": "cd server && ts-node-dev src/index.ts",
-    "dev:s": "cd apps/elderly-app && npm run dev",
-    "dev:d": "cd apps/family-app && npm run dev",
-    "dev:f": "cd apps/nurse-app && npm run dev",
+    "dev:server": "cd server && ts-node-dev src/index.ts",
+    "dev:elderly": "cd apps/elderly-app && npm run dev",
+    "dev:family": "cd apps/family-app && npm run dev",
+    "dev:nurse": "cd apps/nurse-app && npm run dev",
     "dev:admin": "cd apps/admin-panel && npm run dev",
     "lint": "eslint . --ext .ts,.tsx,.vue --fix",
     "prepare": "husky install"

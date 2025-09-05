@@ -33,7 +33,7 @@ const MedicationReminder: React.FC = () => {
 
         let cancelled = false;
 
-        const load = async () => {
+        const load = async (): Promise<void> => {
             try {
                 const archive = await ElderHealthService.getMyArchive();
                 if (!archive) {
@@ -56,12 +56,22 @@ const MedicationReminder: React.FC = () => {
                 const normalized: Medication[] = Array.from(map.entries()).map(
                     ([name, set]) => ({ name, times: Array.from(set).sort() })
                 );
+                // 立即同步到 ref，方便后续立即轮询使用最新数据
+                medsRef.current = normalized;
                 if (!cancelled) setMedications(normalized);
             } catch {
                 // ignore errors
             }
         };
         load();
+
+        // 监听来自服务的档案更新事件，立即刷新用药列表以无需刷新页面
+        const handleArchiveUpdated = async () => {
+            await load();
+            // 立刻检查一次是否到点
+            poll();
+        };
+        window.addEventListener("elderhealth:archiveUpdated", handleArchiveUpdated as EventListener);
 
         // 定时刷新档案（防止后台更新后错过提醒），每5分钟刷新一次列表
         const refreshId = window.setInterval(load, 5 * 60 * 1000);
@@ -149,11 +159,14 @@ const MedicationReminder: React.FC = () => {
         };
 
         timerRef.current = window.setInterval(poll, 10000);
+        // 立即执行一次，避免刚添加用药时间时需要等待下一轮轮询
+        poll();
 
         return () => {
             cancelled = true;
             if (timerRef.current) window.clearInterval(timerRef.current);
             window.clearInterval(refreshId);
+            window.removeEventListener("elderhealth:archiveUpdated", handleArchiveUpdated as EventListener);
         };
     }, [medications.length]);
 
