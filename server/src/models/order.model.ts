@@ -33,7 +33,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
       default: "published",
     },
 
-    regionManager: { type: String, default: null },
+    regionManager: { type: String, default: 'admin1' },
     nurseId: { type: Schema.Types.ObjectId, ref: "User", default: null },
 
     scheduledStartTime: { type: Date },
