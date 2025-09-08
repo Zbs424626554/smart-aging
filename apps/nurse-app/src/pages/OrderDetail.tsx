@@ -20,13 +20,7 @@ const statusColor: Record<UiOrderStatus, string> = {
     cancelled: 'red',
 };
 
-// 支付状态文案映射
-const paymentTextMap: Record<string, string> = {
-    paid: '已支付',
-    pending: '未支付',
-    unpaid: '未支付',
-    refunded: '已退款',
-};
+// 已移除支付状态显示
 
 export default function OrderDetail() {
     const { id } = useParams();
@@ -44,7 +38,7 @@ export default function OrderDetail() {
     const navOriginRef = useRef<{ lng: number; lat: number } | null>(null);
     const navDestinationRef = useRef<{ lng: number; lat: number } | null>(null);
     const [navUrl, setNavUrl] = useState<string>('');
-    const [safetyRadius] = useState<number>(500);
+    const [safetyRadius] = useState<number>(800);
     const safetyCircleRef = useRef<any>(null);
     const currentMarkerRef = useRef<any>(null);
     const geoWatchIdRef = useRef<number | null>(null);
@@ -542,12 +536,11 @@ export default function OrderDetail() {
                     </Space>
                 </Card>
 
-                <Card title="详细信息">
+                <Card title="">
                     <Descriptions column={1}>
                         <Descriptions.Item label="订单编号">{order.id || (order as any)._id || '-'}</Descriptions.Item>
-                        <Descriptions.Item label="下单时间">{order.startTime ? new Date(order.startTime).toLocaleString() : '-'}</Descriptions.Item>
-                        <Descriptions.Item label="支付状态">{paymentTextMap[(order.paymentStatus || '').toLowerCase()] || (order.paymentStatus || '-')}</Descriptions.Item>
-                        <Descriptions.Item label="备注">{(order as any).requirements || (order as any).remarks || '-'}</Descriptions.Item>
+                        <Descriptions.Item label="计划开始时间">{(order as any).scheduledStartTime ? new Date((order as any).scheduledStartTime).toLocaleString() : '-'}</Descriptions.Item>
+                        <Descriptions.Item label="计划结束时间">{(order as any).scheduledEndTime ? new Date((order as any).scheduledEndTime).toLocaleString() : '-'}</Descriptions.Item>
                     </Descriptions>
                 </Card>
                 {orderStatus === 'processing' && (

@@ -9,7 +9,7 @@ export interface IApprove extends Document {
     idCardFront: string;                  // 身份证正面照片
     idCardBack?: string;                  // 身份证背面照片（可选）
     certificateType: 'nursing' | 'health' | 'both'; // 证书类型
-    certificateNumber?: string;           // 证书编号
+    certificateNo?: string;               // 证书编号
     status: 'pending' | 'approved' | 'rejected'; // 审核状态
     submitTime: Date;                     // 提交时间
     reviewTime?: Date;                    // 审核时间
@@ -56,7 +56,7 @@ const approveSchema = new Schema({
         enum: ['nursing', 'health', 'both'],
         required: false
     },
-    certificateNumber: {
+    certificateNo: {
         type: String,
         required: false
     },

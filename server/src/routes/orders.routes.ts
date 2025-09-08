@@ -38,15 +38,12 @@ type UiStatus = 'assigned' | 'processing' | 'completed' | 'cancelled';
 
 function mapDbToUiStatus(status: IOrder['status']): UiStatus {
     switch (status) {
-        case 'started':
+        case 'in_progress':
             return 'processing';
         case 'completed':
-        case 'confirmed':
             return 'completed';
-        case 'canceled':
-            return 'cancelled';
-        case 'pending':
-        case 'accepted':
+        case 'published':
+        case 'assigned':
         default:
             return 'assigned';
     }
@@ -55,14 +52,15 @@ function mapDbToUiStatus(status: IOrder['status']): UiStatus {
 function mapUiToDbStatus(status: UiStatus): IOrder['status'] {
     switch (status) {
         case 'processing':
-            return 'started';
+            return 'in_progress';
         case 'completed':
             return 'completed';
-        case 'cancelled':
-            return 'canceled';
         case 'assigned':
+            return 'assigned';
+        case 'cancelled':
         default:
-            return 'accepted';
+            // 当前模型不支持取消，回落为 assigned
+            return 'assigned';
     }
 }
 
@@ -73,17 +71,17 @@ router.get('/available', async (req: Request, res: Response) => {
         const nurseObjectId = toObjectIdOrNull(userId);
         const orQuery: any[] = [
             {
-                status: { $in: ['pending'] },
+                status: { $in: ['published'] },
                 $or: [{ nurseId: { $exists: false } }, { nurseId: null }],
             },
         ];
-        // 将“指派给我但未开始(accepted)”的订单也作为待接收显示
+        // 将“指派给我但未开始(assigned)”的订单也作为待接收显示
         if (nurseObjectId) {
-            orQuery.push({ status: 'accepted', nurseId: nurseObjectId });
+            orQuery.push({ status: 'assigned', nurseId: nurseObjectId });
         }
 
         const orders = await Order.find({ $or: orQuery })
-            .sort({ orderTime: -1 })
+            .sort({ scheduledStartTime: -1 })
             .lean();
 
         const data = orders.map((o) => ({
@@ -110,8 +108,13 @@ router.get('/my', async (req: Request, res: Response) => {
             return res.json({ code: 401, message: '未登录', data: null });
         }
         const orders = await Order.find({ nurseId: nurseObjectId })
-            .sort({ orderTime: -1 })
+            .sort({ scheduledStartTime: -1 })
             .lean();
+
+        // 调试日志（仅在开发环境输出）
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('[GET /api/orders/my] nurseId:', nurseObjectId?.toString(), 'count:', orders?.length || 0);
+        }
 
         const data = orders.map((o) => ({
             ...o,
@@ -147,7 +150,7 @@ router.patch('/:id/assign-me', async (req: Request, res: Response) => {
         // 使用原子更新，避免因其他字段缺失触发验证失败
         const updated = await Order.findByIdAndUpdate(
             id,
-            { $set: { nurseId: nurseObjectId, status: 'accepted' } },
+            { $set: { nurseId: nurseObjectId, status: 'assigned' } },
             { new: true }
         ).lean();
 
@@ -176,7 +179,7 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
             return res.json({ code: 400, message: '缺少status参数', data: null });
         }
 
-        const order = await Order.findById(id).select('nurseId startTime');
+        const order = await Order.findById(id).select('nurseId actualStartTime');
         if (!order) {
             return res.json({ code: 404, message: '订单不存在', data: null });
         }
@@ -189,11 +192,11 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
         const dbStatus = mapUiToDbStatus(status);
         const update: any = { status: dbStatus };
         const now = new Date();
-        if (dbStatus === 'started' && !order.startTime) {
-            update.startTime = now;
+        if (dbStatus === 'in_progress' && !(order as any).actualStartTime) {
+            update.actualStartTime = now;
         }
         if (dbStatus === 'completed') {
-            update.endTime = now;
+            update.actualEndTime = now;
         }
 
         const updated = await Order.findByIdAndUpdate(id, { $set: update }, { new: true }).lean();

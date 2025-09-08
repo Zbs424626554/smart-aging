@@ -42,7 +42,7 @@ router.get('/', async (req: Request, res: Response) => {
             nurseName: d.nurseName,
             phone: d.phone || '—',
             idCard: d.idcard, // 注意：集合字段为 idcard，这里输出为 idCard 以适配前端
-            certificateNo: d.certificateNumber || '—',
+            certificateNo: d.certificateNo || (d as any).certificateNumber || '—',
             certificateType: typeLabel(d.certificateType),
             certificateImage: d.certificateImage || '',
             idCardFront: d.idCardFront || '',
@@ -72,7 +72,8 @@ router.post('/', async (req: Request, res: Response) => {
         const certificateImage = body.certificateImage;
         const idCardFront = body.idCardFront;
         const idCardBack = body.idCardBack;
-        const certificateNumber = body.certificateNo || body.certificateNumber;
+        // 兼容历史字段名 certificateNumber（写入时统一为 certificateNo）
+        const certificateNo = body.certificateNo || body.certificateNumber;
         // 兼容中文/英文/默认
         const ctRaw: any = body.certificateType;
         const certificateType: 'nursing' | 'health' | 'both' =
@@ -88,7 +89,7 @@ router.post('/', async (req: Request, res: Response) => {
             ...(certificateImage && { certificateImage }),
             ...(idCardFront && { idCardFront }),
             ...(idCardBack && { idCardBack }),
-            ...(certificateNumber && { certificateNumber }),
+            ...(certificateNo && { certificateNo }),
             certificateType,
             status: 'pending',
             submitTime: new Date(),
@@ -209,7 +210,7 @@ router.get('/:id', async (req: Request, res: Response) => {
             nurseName: d.nurseName,
             phone: d.phone || '—',
             idCard: d.idcard,
-            certificateNo: d.certificateNumber || '—',
+            certificateNo: d.certificateNo || (d as any).certificateNumber || '—',
             certificateType: typeLabelOne(d.certificateType),
             certificateImage: d.certificateImage || '',
             idCardFront: d.idCardFront || '',

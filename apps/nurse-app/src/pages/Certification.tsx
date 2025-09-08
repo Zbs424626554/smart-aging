@@ -19,7 +19,6 @@ import {
   FileTextOutlined,
   TagsOutlined,
   GlobalOutlined,
-  EditOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   ExclamationCircleOutlined
@@ -30,7 +29,6 @@ import ApproveService from '../services/approve.service';
 import HorizontalStepper from '../components/HorizontalStepper';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 interface CertificationForm {
   nurseName: string;
@@ -40,7 +38,6 @@ interface CertificationForm {
   certificateImage: UploadFile[];
   skills: string[];
   serviceAreas: string[];
-  selfIntroduction: string;
 }
 
 const Certification: React.FC = () => {
@@ -61,14 +58,15 @@ const Certification: React.FC = () => {
   const checkCertificationStatus = async () => {
     try {
       console.log('开始查询认证状态...');
-      const response = await request.get('/approves', {
+      const res = await request.get('/approves', {
         params: {}
       });
 
-      console.log('认证状态查询响应:', response);
-      console.log('响应数据:', response.data);
+      console.log('认证状态查询响应:', res);
+      console.log('响应数据:', res.data);
 
-      const list = response?.data as any[] | undefined;
+      // 响应结构为 { code, message, data }
+      const list = (res as any)?.data as any[] | undefined;
       if (Array.isArray(list) && list.length > 0) {
         const latestCert = list[0];
         console.log('最新认证记录:', latestCert);
@@ -343,35 +341,6 @@ const Certification: React.FC = () => {
           </Form.Item>
         </Card>
       )
-    },
-    {
-      title: '自我介绍',
-      icon: <EditOutlined />,
-      content: (
-        <Card size="small" style={{ marginBottom: 16 }}>
-          <Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: '14px' }}>
-            请简要介绍您的护理经验、专业特长和服务理念
-          </Text>
-
-          <Form.Item
-            name="selfIntroduction"
-            label="自我介绍"
-            rules={[
-              { required: true, message: '请输入自我介绍' },
-              { min: 10, message: '自我介绍至少10字' },
-              { max: 500, message: '自我介绍不能超过500字' }
-            ]}
-          >
-            <TextArea
-              rows={6}
-              placeholder="请介绍您的护理经验、专业特长、服务理念等..."
-              showCount
-              maxLength={500}
-              style={{ borderRadius: '8px', resize: 'none' }}
-            />
-          </Form.Item>
-        </Card>
-      )
     }
   ];
 
@@ -470,8 +439,7 @@ const Certification: React.FC = () => {
       ['nurseName', 'phone'],
       ['idCardFront', 'idCardBack', 'certificateImage'],
       ['skills'],
-      ['serviceAreas'],
-      ['selfIntroduction']
+      ['serviceAreas']
     ];
     const fields = stepFields[currentStep] as any;
 
