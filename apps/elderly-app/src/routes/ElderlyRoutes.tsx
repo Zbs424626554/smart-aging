@@ -6,13 +6,13 @@ import { Login, Register } from "@smart-aging/packages";
 // 老人端页面
 import Layout from "../pages/Layout";
 import Emergency from "../pages/Emergency";
-import Orders from "../pages/Orders";
 import Profile from "../pages/Profile";
 import Message from "../pages/Message";
 import Heath from "../pages/Health";
 import Chat from "../pages/Chat";
 import Community from "../pages/Community";
 import Publish from "../pages/Publish";
+import AddFriends from "../pages/AddFriends";
 
 // 根路由重定向组件
 const RootRedirect: React.FC = () => {
@@ -24,7 +24,7 @@ const RootRedirect: React.FC = () => {
   }
 
   if (currentRole === "elderly") {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/home/call" replace />;
   }
 
   // 其他角色或异常情况，统一跳转登录页
@@ -61,6 +61,7 @@ const ElderlyRoutes: React.FC = () => {
       <Route path="chat/:id" element={<Chat />} />
       <Route path="health" element={<Heath />} />
       <Route path="publish" element={<Publish />} />
+      <Route path="addFriends" element={<AddFriends />} />
 
       {/* 404页面 */}
       <Route path="*" element={<Navigate to="/" replace />} />

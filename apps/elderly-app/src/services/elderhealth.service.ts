@@ -14,6 +14,8 @@ export interface ElderHealthArchiveDto {
   // 兼容旧结构：{ name, time }
   useMedication?: Array<{ name: string; time?: string; times?: string[] }>;
   // 扩展：健康状态字段与时间
+  heightCm?: number;
+  weightKg?: number;
   heartRate?: number;
   bloodPressure?: string;
   temperature?: number;
@@ -145,6 +147,23 @@ export class ElderHealthService {
     const { data } = await http.post<ElderHealthArchiveDto>(
       "/elderhealth/age",
       { age }
+    );
+    return data as ElderHealthArchiveDto;
+  }
+
+  // newDevelop: 更新身高/体重
+  static async updateHeight(heightCm: number): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/height",
+      { heightCm }
+    );
+    return data as ElderHealthArchiveDto;
+  }
+
+  static async updateWeight(weightKg: number): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/weight",
+      { weightKg }
     );
     return data as ElderHealthArchiveDto;
   }

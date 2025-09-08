@@ -42,6 +42,8 @@ export class ElderHealthController {
           medicals: [],
           allergies: [],
           useMedication: [],
+          heightCm: 0,
+          weightKg: 0,
         };
 
         return res.json({
@@ -65,6 +67,8 @@ export class ElderHealthController {
           medicals: healthArchive.medicals,
           allergies: healthArchive.allergies,
           useMedication: healthArchive.useMedication,
+          heightCm: (healthArchive as any).heightCm,
+          weightKg: (healthArchive as any).weightKg,
         },
       });
     } catch (error) {

@@ -22,6 +22,9 @@ import userRoutesZBS from "./routes/ZBS/users";
 import elderHealthRoutes from "./routes/ZBS/elderhealth";
 import elderOrderRoutes from "./routes/ZBS/elderorder";
 import newDevelopElderHealthRoutes from "./routes/newDevelop/elderhealth";
+import newDevelopCommunityRoutes from "./routes/newDevelop/community";
+import newDevelopSttRoutes from "./routes/newDevelop/stt";
+import newDevelopFriendRoutes from "./routes/newDevelop/friend";
 
 dotenv.config();
 
@@ -75,6 +78,9 @@ app.use("/api", messageRoutes);
 app.use("/api", userRoutesZBS);
 app.use("/api", elderHealthRoutes);
 app.use("/api", newDevelopElderHealthRoutes);
+app.use("/api", newDevelopCommunityRoutes);
+app.use("/api", newDevelopSttRoutes);
+app.use("/api", newDevelopFriendRoutes);
 app.use("/api/elderorder", elderOrderRoutes);
 
 // WebSocket服务器设置

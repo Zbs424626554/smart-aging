@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { LeftOutline } from "antd-mobile-icons";
 
-export default function NavBal(props: { title: string }) {
+export const NavBal = (props: { title: string; hideBack?: boolean }) => {
   const navigate = useNavigate();
 
   return (
@@ -14,35 +14,39 @@ export default function NavBal(props: { title: string }) {
           right: 0,
           top: 0,
           height: "1.2rem",
-          background: "#F5B886",
+          background: "#fff",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           zIndex: 1000,
-          borderBottom: "1px solid #F5B886",
+          borderBottom: "1px solid #eaeaea",
         }}
       >
-        <div
-          onClick={() => navigate(-1)}
-          style={{
-            position: "absolute",
-            left: "0.3rem",
-            display: "flex",
-            alignItems: "center",
-            color: "#fff",
-            fontSize: "0.48rem",
-            cursor: "pointer",
-          }}
-        >
-          <LeftOutline />
-          <span style={{ marginLeft: "0.12rem", fontSize: "0.36rem" }}>
-            返回
-          </span>
-        </div>
-        <span style={{ color: "#fff", fontSize: "0.42rem", fontWeight: 700 }}>
+        {!props.hideBack && (
+          <div
+            onClick={() => navigate(-1)}
+            style={{
+              position: "absolute",
+              left: "0.3rem",
+              display: "flex",
+              alignItems: "center",
+              color: "#222",
+              fontSize: "0.48rem",
+              cursor: "pointer",
+            }}
+          >
+            <LeftOutline />
+            <span style={{ marginLeft: "0.12rem", fontSize: "0.36rem" }}>
+              返回
+            </span>
+          </div>
+        )}
+        <span style={{ color: "#222", fontSize: "calc(0.50rem)", fontWeight: 700 }}>
           {props.title}
         </span>
       </div>
     </div>
   );
-}
+};
+
+export default NavBal;

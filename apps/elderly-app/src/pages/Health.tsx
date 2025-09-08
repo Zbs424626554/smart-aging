@@ -234,6 +234,112 @@ const Health: React.FC = () => {
         <List.Item
           style={{ fontSize: 18 }}
           extra={
+            <span style={{ fontSize: 18 }}>
+              {archive?.heightCm ? `${archive.heightCm} cm` : "未设置"}
+            </span>
+          }
+          arrow={false}
+          onClick={() => {
+            let heightInput = archive?.heightCm?.toString() || "";
+            let handler: any;
+            handler = Dialog.show({
+              title: "设置身高",
+              content: (
+                <div style={{ paddingTop: 12 }}>
+                  <Input
+                    style={{ fontSize: 18, height: 44 }}
+                    type="number"
+                    placeholder="请输入身高(cm)"
+                    defaultValue={heightInput}
+                    onChange={(v) => (heightInput = v)}
+                  />
+                </div>
+              ),
+              closeOnMaskClick: false,
+              actions: [
+                { key: "cancel", text: "取消", onClick: () => handler.close() },
+                {
+                  key: "ok",
+                  text: "保存",
+                  bold: true,
+                  onClick: async () => {
+                    const val = Number(heightInput);
+                    if (!Number.isFinite(val) || val <= 0 || val > 300) {
+                      Toast.show({ content: "请输入有效身高(0-300cm)" });
+                      return;
+                    }
+                    try {
+                      const updated = await ElderHealthService.updateHeight(val);
+                      setArchive(updated || null);
+                      Toast.show({ content: "已保存" });
+                      handler.close();
+                    } catch (err: any) {
+                      Toast.show({ content: err?.message || "保存失败" });
+                    }
+                  },
+                },
+              ],
+            });
+          }}
+        >
+          身高
+        </List.Item>
+        <List.Item
+          style={{ fontSize: 18 }}
+          extra={
+            <span style={{ fontSize: 18 }}>
+              {archive?.weightKg ? `${archive.weightKg} kg` : "未设置"}
+            </span>
+          }
+          arrow={false}
+          onClick={() => {
+            let weightInput = archive?.weightKg?.toString() || "";
+            let handler: any;
+            handler = Dialog.show({
+              title: "设置体重",
+              content: (
+                <div style={{ paddingTop: 12 }}>
+                  <Input
+                    style={{ fontSize: 18, height: 44 }}
+                    type="number"
+                    placeholder="请输入体重(kg)"
+                    defaultValue={weightInput}
+                    onChange={(v) => (weightInput = v)}
+                  />
+                </div>
+              ),
+              closeOnMaskClick: false,
+              actions: [
+                { key: "cancel", text: "取消", onClick: () => handler.close() },
+                {
+                  key: "ok",
+                  text: "保存",
+                  bold: true,
+                  onClick: async () => {
+                    const val = Number(weightInput);
+                    if (!Number.isFinite(val) || val <= 0 || val > 500) {
+                      Toast.show({ content: "请输入有效体重(0-500kg)" });
+                      return;
+                    }
+                    try {
+                      const updated = await ElderHealthService.updateWeight(val);
+                      setArchive(updated || null);
+                      Toast.show({ content: "已保存" });
+                      handler.close();
+                    } catch (err: any) {
+                      Toast.show({ content: err?.message || "保存失败" });
+                    }
+                  },
+                },
+              ],
+            });
+          }}
+        >
+          体重
+        </List.Item>
+        <List.Item
+          style={{ fontSize: 18 }}
+          extra={
             <span style={{ fontSize: 18 }}>{maskPhone(archive?.phone)}</span>
           }
         >

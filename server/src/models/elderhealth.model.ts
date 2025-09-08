@@ -17,6 +17,9 @@ export interface IElderHealthArchive extends Document {
   allergies?: string[];
   // 兼容旧结构：time，新增结构：times[]
   useMedication?: Array<{ name: string; time?: string; times?: string[] }>;
+  // 新增：体格信息
+  heightCm?: number;
+  weightKg?: number;
   heartRate?: number;
   bloodPressure?: string;
   temperature?: number;
@@ -78,6 +81,17 @@ const elderHealthArchiveSchema = new Schema(
       ],
       required: false,
       default: [],
+    },
+    // 新增：身高（cm）与体重（kg）
+    heightCm: {
+      type: Number,
+      min: 0,
+      max: 300,
+    },
+    weightKg: {
+      type: Number,
+      min: 0,
+      max: 500,
     },
     heartRate: {
       type: Number,

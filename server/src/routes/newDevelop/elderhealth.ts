@@ -9,4 +9,14 @@ router.post(
   NewDevelopElderHealthController.deleteMedicationTime
 );
 
+// 更新身高/体重
+router.post(
+  "/elderhealth/height",
+  NewDevelopElderHealthController.updateHeight
+);
+router.post(
+  "/elderhealth/weight",
+  NewDevelopElderHealthController.updateWeight
+);
+
 export default router;

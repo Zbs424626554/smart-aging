@@ -8,12 +8,19 @@ export interface ICommunityPost extends Document {
   images?: string[];
   videos?: string[];
   publishedAt?: Date;
-  likes: mongoose.Types.ObjectId[];
+  likes: Array<{
+    userId: mongoose.Types.ObjectId;
+    username: string;
+  }>;
   comments: Array<{
     userId: mongoose.Types.ObjectId;
     username: string;
     content: string;
     createdAt?: Date;
+    replyTo?: {
+      userId: mongoose.Types.ObjectId;
+      username: string;
+    };
   }>;
 }
 
@@ -23,6 +30,18 @@ const commentSchema = new Schema(
     username: { type: String, required: true },
     content: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
+    replyTo: {
+      userId: { type: Schema.Types.ObjectId, ref: "User" },
+      username: { type: String },
+    },
+  },
+  { _id: false }
+);
+
+const likeSchema = new Schema(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    username: { type: String, required: true },
   },
   { _id: false }
 );
@@ -35,7 +54,7 @@ const communityPostSchema = new Schema(
     images: { type: [String], default: [] },
     videos: { type: [String], default: [] },
     publishedAt: { type: Date, default: Date.now },
-    likes: { type: [Schema.Types.ObjectId], ref: "User", default: [] },
+    likes: { type: [likeSchema], default: [] },
     comments: { type: [commentSchema], default: [] },
   },
   {

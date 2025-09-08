@@ -82,6 +82,96 @@ export class NewDevelopElderHealthController {
         .json({ code: 500, message: "服务器错误", data: null });
     }
   }
+
+  // 更新身高（厘米）
+  static async updateHeight(req: Request, res: Response) {
+    try {
+      const auth = req.headers.authorization;
+      let userId: string | null = null;
+
+      if (auth && auth.startsWith("Bearer ")) {
+        const token = auth.slice(7);
+        try {
+          const payload = verifyToken(token) as any;
+          userId = payload?.id || null;
+        } catch {
+          // ignore token errors
+        }
+      }
+
+      const elderIdFromQuery = (req.query.elderId as string) || null;
+      const elderId = userId || elderIdFromQuery;
+
+      if (!elderId) {
+        return res.json({ code: 401, message: "未登录", data: null });
+      }
+
+      const raw = req.body?.heightCm;
+      const heightCm = Number(raw);
+      if (!Number.isFinite(heightCm) || heightCm <= 0 || heightCm > 300) {
+        return res.json({ code: 400, message: "身高参数不合法", data: null });
+      }
+
+      await ElderHealthArchive.updateOne(
+        { elderID: elderId },
+        { $setOnInsert: { elderID: elderId }, $set: { heightCm } },
+        { upsert: true }
+      );
+
+      const updated = await ElderHealthArchive.findOne({ elderID: elderId });
+      return res.json({ code: 200, message: "保存成功", data: updated });
+    } catch (error) {
+      console.error("[newDevelop] 更新身高失败:", error);
+      return res
+        .status(500)
+        .json({ code: 500, message: "服务器错误", data: null });
+    }
+  }
+
+  // 更新体重（千克）
+  static async updateWeight(req: Request, res: Response) {
+    try {
+      const auth = req.headers.authorization;
+      let userId: string | null = null;
+
+      if (auth && auth.startsWith("Bearer ")) {
+        const token = auth.slice(7);
+        try {
+          const payload = verifyToken(token) as any;
+          userId = payload?.id || null;
+        } catch {
+          // ignore token errors
+        }
+      }
+
+      const elderIdFromQuery = (req.query.elderId as string) || null;
+      const elderId = userId || elderIdFromQuery;
+
+      if (!elderId) {
+        return res.json({ code: 401, message: "未登录", data: null });
+      }
+
+      const raw = req.body?.weightKg;
+      const weightKg = Number(raw);
+      if (!Number.isFinite(weightKg) || weightKg <= 0 || weightKg > 500) {
+        return res.json({ code: 400, message: "体重参数不合法", data: null });
+      }
+
+      await ElderHealthArchive.updateOne(
+        { elderID: elderId },
+        { $setOnInsert: { elderID: elderId }, $set: { weightKg } },
+        { upsert: true }
+      );
+
+      const updated = await ElderHealthArchive.findOne({ elderID: elderId });
+      return res.json({ code: 200, message: "保存成功", data: updated });
+    } catch (error) {
+      console.error("[newDevelop] 更新体重失败:", error);
+      return res
+        .status(500)
+        .json({ code: 500, message: "服务器错误", data: null });
+    }
+  }
 }
 
 export default NewDevelopElderHealthController;

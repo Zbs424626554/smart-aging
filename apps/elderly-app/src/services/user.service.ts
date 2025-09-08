@@ -23,6 +23,19 @@ export interface UsersResponse {
 }
 
 export class UserService {
+  // 创建好友申请
+  static async createFriendRequest(payload: FriendRequestPayload) {
+    return http.post("/friend/request", payload);
+  }
+
+  // 获取收到的好友申请
+  static async getReceivedFriendRequests(params: { toUserId?: string; toUsername?: string; status?: string }) {
+    return http.get("/friend/requests", { params });
+  }
+
+  static async updateFriendRequestStatus(id: string, status: 'approved' | 'rejected') {
+    return http.patch(`/friend/request/${id}/status`, { status });
+  }
   // 获取所有用户
   static async getUsers(
     params: {
