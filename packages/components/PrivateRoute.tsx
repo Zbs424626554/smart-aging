@@ -23,6 +23,7 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
 
   // 如果未登录，重定向到登录页
   if (!isLoggedIn) {
+    // 未登录统一回根路径，由各端 RootRedirect 处理，避免跨端直接登录页造成状态错乱
     return <Navigate to={'/'} state={{ from: location }} replace />;
   }
 
@@ -32,23 +33,8 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
     const hasPermission = requiredRoles.includes(currentRole);
 
     if (!hasPermission) {
-      // 根据角色重定向到对应的应用
-      const roleRedirectMap: Record<UserRole, string> = {
-        elderly: 'http://localhost:5173',
-        family: 'http://localhost:5174',
-        nurse: 'http://localhost:5175',
-        admin: 'http://localhost:5176'
-      };
-
-      const redirectPath = roleRedirectMap[currentRole] || '/login';
-
-      // 如果是跨应用重定向，使用window.location
-      if (redirectPath.startsWith('http')) {
-        window.location.href = redirectPath;
-        return null;
-      }
-
-      return <Navigate to={redirectPath} replace />;
+      // 不在守卫中直接进行跨端跳转，统一回根路径交给 RootRedirect
+      return <Navigate to={'/'} replace />;
     }
   }
 

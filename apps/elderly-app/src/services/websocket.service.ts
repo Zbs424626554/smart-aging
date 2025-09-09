@@ -1,19 +1,19 @@
 // WebSocket服务，用于实时消息通信
 export interface WebSocketMessage {
   type:
-    | "message"
-    | "user_online"
-    | "user_offline"
-    | "typing"
-    | "stop_typing"
-    | "call_invite"
-    | "call_response"
-    | "call_cancel"
-    | "call_end"
-    | "webrtc_offer"
-    | "webrtc_answer"
-    | "webrtc_ice_candidate"
-    | "conversation_updated";
+  | "message"
+  | "user_online"
+  | "user_offline"
+  | "typing"
+  | "stop_typing"
+  | "call_invite"
+  | "call_response"
+  | "call_cancel"
+  | "call_end"
+  | "webrtc_offer"
+  | "webrtc_answer"
+  | "webrtc_ice_candidate"
+  | "conversation_updated";
   data: any;
   conversationId?: string;
   sender?: string;
@@ -32,7 +32,7 @@ export class WebSocketService {
   private isConnecting = false;
   private currentUser: string | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): WebSocketService {
     if (!WebSocketService.instance) {
@@ -96,8 +96,12 @@ export class WebSocketService {
         };
 
         this.ws.onmessage = (event) => {
+          // 调试日志，定位通话信令
           try {
             const message: WebSocketMessage = JSON.parse(event.data);
+            if (message?.type === 'call_response' || message?.type === 'webrtc_answer' || message?.type === 'call_invite') {
+              console.log('[WS] recv', message.type, message);
+            }
             this.handleMessage(message);
           } catch (error) {
             console.warn("解析WebSocket消息失败:", error);
@@ -134,7 +138,7 @@ export class WebSocketService {
           if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
             try {
               this.ws.close();
-            } catch {}
+            } catch { }
             this.isConnecting = false;
             reject(new Error("WebSocket连接超时"));
             this.scheduleReconnect();

@@ -23,7 +23,7 @@ import Chat from "../pages/Chat";
 // 根路由重定向组件
 const RootRedirect: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-  const currentRole = AuthService.getCurrentRole();
+  const [resolvedRole, setResolvedRole] = useState<string | null>(AuthService.getCurrentRole());
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -47,6 +47,7 @@ const RootRedirect: React.FC = () => {
             const payload = JSON.parse(atob(payloadBase64));
             if (payload?.role) {
               localStorage.setItem('userRole', payload.role);
+              setResolvedRole(payload.role);
             }
           }
         } catch { }
@@ -57,7 +58,7 @@ const RootRedirect: React.FC = () => {
         const res: any = await AuthService.getProfile();
         if ((res?.code === 200) || (res?.data && (res as any).status === 200)) {
           const user = (res.data?.user) || (res.data);
-          if (user?.role) localStorage.setItem('userRole', user.role);
+          if (user?.role) { localStorage.setItem('userRole', user.role); setResolvedRole(user.role); }
           if (user) localStorage.setItem('userInfo', JSON.stringify(user));
           setIsLoggedIn(true);
         } else if (!token) {
@@ -72,7 +73,8 @@ const RootRedirect: React.FC = () => {
 
   if (isLoggedIn === null) return null; // loading
   if (!isLoggedIn) return <Navigate to="/login" replace />;
-  if (currentRole === "family") return <Navigate to="/home" replace />;
+  // 仅当解析到本端角色时才进入首页
+  if (resolvedRole === "family") return <Navigate to="/home" replace />;
   return <Navigate to="/login" replace />;
 };
 

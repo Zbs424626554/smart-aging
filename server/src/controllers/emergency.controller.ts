@@ -118,7 +118,7 @@ export const commitEmergency = (io: IOServer) => async (req: Request, res: Respo
       elderlyName = (u as any)?.username || (u as any)?.realname;
     } catch { }
   }
-  const callingPayload = { alertId: id, status: 'calling', elderlyId, elderlyName, contactPhone, location };
+  const callingPayload = { alertId: id, status: 'calling', callStatus: 'ringing', elderlyId, elderlyName, contactPhone, location };
   // 临时：如果没有找到紧急联系人，就广播给所有人（测试用）
   if (receivers.length === 0) {
     io.emit('emergency:updated', callingPayload);
@@ -155,7 +155,7 @@ export const commitEmergency = (io: IOServer) => async (req: Request, res: Respo
       if (transcript) updateData.transcript = transcript;
       await EmergencyAlert.findByIdAndUpdate(id, updateData);
 
-      const analyzedPayload = { alertId: id, status: 'calling', aiAnalysis, transcript, elderlyId, elderlyName, contactPhone, location };
+      const analyzedPayload = { alertId: id, status: 'calling', callStatus: 'ringing', aiAnalysis, transcript, elderlyId, elderlyName, contactPhone, location };
       if (receivers.length === 0) {
         io.emit('emergency:updated', analyzedPayload);
       } else {

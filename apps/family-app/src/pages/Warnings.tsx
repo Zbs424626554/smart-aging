@@ -4,6 +4,8 @@ import { socket, registerUser } from '../socket';
 import { AuthService } from '../services/auth.service';
 import request from '../utils/request';
 import PageHeader from '../components/PageHeader';
+import { MessageService } from '../services/message.service';
+import { useNavigate } from 'react-router-dom';
 
 interface Warning {
   id: string;
@@ -30,6 +32,8 @@ const Warnings: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const user = AuthService.getCurrentUser();
     const uid = user?.id || (user as any)?._id;
@@ -39,38 +43,44 @@ const Warnings: React.FC = () => {
     // 初始化拉取历史
     request.get('/emergency/family').then((resp: any) => {
       const arr = Array.isArray(resp.data) ? resp.data : [];
-      const mapped = arr.map((p: any) => ({
-        id: String(p._id || p.alertId || Date.now()),
-        title: p.status === 'calling' ? '外呼中' : '紧急求助',
-        description: p.aiAnalysis ? safeSummary(p.aiAnalysis) : '老人发起紧急呼叫',
-        type: 'emergency' as const,
-        time: new Date(p.createdAt || Date.now()).toLocaleString(),
-        elderlyName: p.elderlyName || String(p.userId || '老人'),
-        status: p.status === 'falseAlarm' ? 'handled' : 'unread',
-        priority: 'high' as const,
-        location: p.location ? JSON.stringify(p.location) : undefined,
-        contactInfo: p.contactPhone || '',
-        transcript: p.transcript,
-        raw: p
-      }));
+      const mapped = arr.map((p: any) => {
+        const risk = parseRiskLevel(p.aiAnalysis); // 'low'|'medium'|'high'|undefined
+        const { t, pr } = riskToTypePriority(risk);
+        return {
+          id: String(p._id || p.alertId || Date.now()),
+          title: p.status === 'calling' ? '外呼中' : '紧急求助',
+          description: p.aiAnalysis ? safeSummary(p.aiAnalysis) : '老人发起紧急呼叫',
+          type: t,
+          time: new Date(p.createdAt || Date.now()).toLocaleString(),
+          elderlyName: p.elderlyName || String(p.userId || '老人'),
+          status: p.status === 'falseAlarm' ? 'handled' : 'unread',
+          priority: pr,
+          location: p.location ? JSON.stringify(p.location) : undefined,
+          contactInfo: p.contactPhone || '',
+          transcript: p.transcript,
+          raw: p
+        } as Warning;
+      });
       setWarnings(mapped);
     }).catch(() => void 0);
     const handler = (payload: any) => {
       // 仅处理紧急事件
       const now = new Date();
+      const risk = parseRiskLevel(payload.aiAnalysis);
+      const { t, pr } = riskToTypePriority(risk);
       const newItem: Warning = {
         id: payload.alertId,
-        title: payload.status === 'calling' ? '外呼中' : '紧急求助',
+        title: payload.status === 'calling' ? (payload.callStatus === 'connected' ? '通话中' : payload.callStatus === 'not_answered' ? '未接通' : '外呼中') : '紧急求助',
         description: payload.aiAnalysis
           ? (() => {
             try { return safeSummary(payload.aiAnalysis); } catch { return '老人发起紧急呼叫'; }
           })()
           : '老人发起紧急呼叫',
-        type: 'emergency',
+        type: t,
         time: now.toLocaleString(),
         elderlyName: payload.elderlyName || '老人',
         status: payload.status === 'falseAlarm' ? 'handled' : 'unread',
-        priority: 'high',
+        priority: pr,
         location: payload.location ? JSON.stringify(payload.location) : undefined,
         contactInfo: payload.contactPhone,
         transcript: payload.transcript,
@@ -138,10 +148,38 @@ const Warnings: React.FC = () => {
   };
 
   const handleContact = (warning: Warning) => {
-    if (warning.contactInfo) {
-      window.location.href = `tel:${warning.contactInfo}`;
-    }
+    startVoiceCall(warning).catch(() => {
+      // 失败时退化为电话
+      if (warning.contactInfo) window.location.href = `tel:${warning.contactInfo}`;
+    });
   };
+
+  async function startVoiceCall(warning: Warning) {
+    // 使用聊天通道发起应用内语音通话：创建或获取对话并跳转 Chat
+    const me = AuthService.getCurrentUser();
+    const myUsername = (me as any)?.username || (me as any)?.realname || '';
+    const elderUsername = warning.elderlyName; // elderlyName 已兜底为老人 username/realname
+    if (!myUsername || !elderUsername) throw new Error('缺少用户名');
+
+    console.log('[Warnings] creating conversation...', { myUsername, elderUsername, alertId: warning.id });
+    const createRes: any = await MessageService.createConversation({
+      participants: [
+        { username: myUsername, role: (me as any)?.role || 'family' },
+        { username: elderUsername, role: 'elderly' }
+      ],
+      initialMessage: {
+        content: JSON.stringify({ kind: 'voice_call_invite', alertId: warning.id }),
+        type: 'voice_call'
+      }
+    });
+    const conversationId = createRes?.data?.conversationId || createRes?.conversationId || createRes?.id;
+    console.log('[Warnings] conversation result=', createRes, 'conversationId=', conversationId);
+    if (conversationId) {
+      navigate(`/chat/${conversationId}?call=1&alertId=${warning.id}`);
+    } else {
+      throw new Error('创建会话失败');
+    }
+  }
 
   function safeSummary(aiAnalysis: string): string {
     try {
@@ -149,6 +187,34 @@ const Warnings: React.FC = () => {
       return obj?.summary || '老人发起紧急呼叫';
     } catch {
       return '老人发起紧急呼叫';
+    }
+  }
+
+  // 从 aiAnalysis(JSON字符串) 中解析 riskLevel: 'low' | 'medium' | 'high'
+  function parseRiskLevel(aiAnalysis?: string): 'low' | 'medium' | 'high' | undefined {
+    if (!aiAnalysis) return undefined;
+    try {
+      const obj = typeof aiAnalysis === 'string' ? JSON.parse(aiAnalysis) : aiAnalysis;
+      const level = (obj?.riskLevel || obj?.RiskLevel || '').toLowerCase();
+      if (level === 'low' || level === 'medium' || level === 'high') return level;
+      return undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  // 将 riskLevel 转成页面的 type/priority
+  function riskToTypePriority(level?: 'low' | 'medium' | 'high') {
+    switch (level) {
+      case 'high':
+        return { t: 'emergency' as const, pr: 'high' as const };
+      case 'medium':
+        // 简化为两级：medium 并入提醒
+        return { t: 'reminder' as const, pr: 'low' as const };
+      case 'low':
+        return { t: 'reminder' as const, pr: 'low' as const };
+      default:
+        return { t: 'emergency' as const, pr: 'high' as const };
     }
   }
 
@@ -363,16 +429,12 @@ const Warnings: React.FC = () => {
         </div>
         <div className={styles['stats-content']}>
           <div className={styles['stat-item']}>
-            <div className={styles['stat-number']}>{warnings.filter(w => w.type === 'emergency').length}</div>
-            <div className={styles['stat-label']}>紧急预警</div>
+            <div className={styles['stat-number']} style={{ color: '#ff4d4f' }}>{warnings.filter(w => w.type === 'emergency').length}</div>
+            <div className={styles['stat-label']} style={{ color: '#ff4d4f' }}>紧急预警</div>
           </div>
           <div className={styles['stat-item']}>
-            <div className={styles['stat-number']}>{warnings.filter(w => w.type === 'warning').length}</div>
-            <div className={styles['stat-label']}>一般预警</div>
-          </div>
-          <div className={styles['stat-item']}>
-            <div className={styles['stat-number']}>{warnings.filter(w => w.type === 'reminder').length}</div>
-            <div className={styles['stat-label']}>提醒事项</div>
+            <div className={styles['stat-number']} style={{ color: '#42a5f5' }}>{warnings.filter(w => w.type === 'reminder').length}</div>
+            <div className={styles['stat-label']} style={{ color: '#42a5f5' }}>提醒事项</div>
           </div>
         </div>
       </div>
@@ -380,7 +442,7 @@ const Warnings: React.FC = () => {
       {/* 预警列表 */}
       <div className={styles['warnings-list']}>
         {warnings.map((warning) => (
-          <div key={warning.id} className={`${styles['warning-card']} ${styles[warning.status]}`}>
+          <div key={warning.id} className={`${styles['warning-card']} ${styles[warning.status]} ${styles[warning.type]}`}>
             <div className={styles['warning-header']}>
               <div className={styles['warning-info']}>
                 <div className={styles['warning-title']}>{warning.title}</div>
@@ -434,22 +496,13 @@ const Warnings: React.FC = () => {
                   立即联系
                 </button>
               )}
-              {warning.type === 'warning' && (
-                <button
-                  className={`${styles['action-btn']} ${styles['warning-btn']}`}
-                  onClick={() => handleWarningAction(warning)}
-                >
-                  <i className="fas fa-exclamation-triangle"></i>
-                  处理预警
-                </button>
-              )}
               {warning.type === 'reminder' && (
                 <button
                   className={`${styles['action-btn']} ${styles['reminder-btn']}`}
-                  onClick={() => handleWarningAction(warning)}
+                  onClick={() => handleContact(warning)}
                 >
-                  <i className="fas fa-check"></i>
-                  确认提醒
+                  <i className="fas fa-phone"></i>
+                  立即联系
                 </button>
               )}
               <button

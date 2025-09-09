@@ -5,8 +5,11 @@ import { speak } from '../utils/tts';
 import { MicRecorder, blobToBase64 } from '../utils/recorder';
 import { getFixedLocation } from '../utils/location';
 import * as emergency from '../services/emergency';
+import { MessageService } from '../services/message.service';
+import { useNavigate } from 'react-router-dom';
 
 export default function EmergencyCall() {
+  const navigate = useNavigate();
   const recorderRef = useRef<MicRecorder | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [alertId, setAlertId] = useState<string | null>(null);
@@ -97,7 +100,8 @@ export default function EmergencyCall() {
     // 提交请求（包含录音、定位、转文字）
     try {
       await emergency.commit(savedAlertId, { location, base64 });
-      Toast.show({ content: '已通知紧急联系人' });
+      // 显著提示
+      Toast.show({ content: '已通知紧急联系人，正在连接…', duration: 2000 });
     } catch (commitError) {
       Toast.show({ content: '操作失败' });
     }
@@ -110,6 +114,47 @@ export default function EmergencyCall() {
       window.clearInterval(timerRef.current);
       timerRef.current = null;
     }
+
+    // 立即发起应用内语音通话：根据档案获取紧急联系人用户名，创建会话并跳转
+    try {
+      console.log('[Emergency] creating conversation & jumping to chat...');
+      const receivers = await emergency.getReceivers(savedAlertId);
+      console.log('[Emergency] receivers=', receivers);
+      if (receivers.length) {
+        const meUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const myUsername = meUser?.username || meUser?.realname || '';
+        // 兜底：若 userInfo 不在，尝试从 token 解码
+        if (!myUsername) {
+          try {
+            const token = localStorage.getItem('token');
+            if (token) {
+              const payloadBase64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+              const payload = payloadBase64 ? JSON.parse(atob(payloadBase64)) : null;
+              if (payload?.username) (meUser as any).username = payload.username;
+            }
+          } catch { }
+        }
+        const elderUsername = (meUser as any)?.username || '';
+        const familyUsername = receivers[0];
+        const createRes: any = await MessageService.createConversation({
+          participants: [
+            { username: elderUsername, role: 'elderly' },
+            { username: familyUsername, role: 'family' }
+          ],
+          initialMessage: {
+            content: JSON.stringify({ kind: 'voice_call_invite', alertId: savedAlertId }),
+            type: 'voice_call'
+          }
+        });
+        const conversationId = createRes?.data?.conversationId || createRes?.conversationId || createRes?.id;
+        console.log('[Emergency] created conversationId=', conversationId, 'resp=', createRes);
+        if (conversationId) {
+          navigate(`/chat/${conversationId}?call=1&alertId=${savedAlertId}`);
+        }
+      } else {
+        console.warn('[Emergency] no receivers');
+      }
+    } catch (e) { console.error('[Emergency] jump chat failed', e); }
   };
 
   return (
@@ -158,7 +203,7 @@ export default function EmergencyCall() {
         </div>
       </div>
 
-            {countdown !== null && (
+      {countdown !== null && (
         <div style={{ marginTop: '0.4rem', fontSize: '0.34rem', textAlign: 'center', color: '#f3433d', fontWeight: 700 }}>
           将在 {countdown} 秒后呼叫，正在录音…
         </div>

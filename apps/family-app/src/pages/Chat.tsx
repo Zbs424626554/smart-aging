@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Input,
   Button,
@@ -302,6 +302,16 @@ const VoicePlayer: React.FC<{
 
 export default function Chat() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const shouldAutoPrompt = useMemo(() => {
+    try {
+      const sp = new URLSearchParams(location.search);
+      return sp.get("call") === "1";
+    } catch {
+      return false;
+    }
+  }, [location.search]);
   const [conversation, setConversation] = useState<ConversationDetail | null>(
     null
   );
@@ -352,6 +362,7 @@ export default function Chat() {
   // 记录最近一次取消/挂断的时间，防止取消后乱序到达的邀请重新弹出
   const lastCancelTimeRef = useRef<Map<string, number>>(new Map());
   const lastEndTimeRef = useRef<Map<string, number>>(new Map());
+  const inviteHandledOnceRef = useRef<boolean>(false);
 
   // WebRTC相关refs
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -434,17 +445,38 @@ export default function Chat() {
   // 获取当前用户信息并连接WebSocket
   useEffect(() => {
     const userInfo = localStorage.getItem("userInfo");
+    console.log("[Family Chat] mount, userInfo=", !!userInfo);
     if (userInfo) {
       try {
         const user = JSON.parse(userInfo);
+        console.log("[Family Chat] parsed user:", user?.username, user?.role);
         setCurrentUser({ username: user.username, role: user.role });
 
         // 异步连接WebSocket，不阻塞其他功能
         setTimeout(() => {
+          console.log("[Family Chat] connecting WS for", user.username);
           connectWebSocket(user.username);
         }, 100);
       } catch (error) {
         console.error("解析用户信息失败:", error);
+      }
+    } else {
+      // 兜底：从 token 解出 username/role
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const payloadBase64 = token.split(".")[1]?.replace(/-/g, "+").replace(/_/g, "/");
+          const payload = payloadBase64 ? JSON.parse(atob(payloadBase64)) : null;
+          const username = payload?.username;
+          const role = payload?.role;
+          if (username) {
+            console.log("[Family Chat] fallback from token:", username, role);
+            setCurrentUser({ username, role });
+            setTimeout(() => connectWebSocket(username), 100);
+          }
+        }
+      } catch (e) {
+        console.warn("[Family Chat] token decode failed", e);
       }
     }
 
@@ -639,7 +671,7 @@ export default function Chat() {
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           localVideoRef.current.muted = true;
-          localVideoRef.current.play().catch(() => {});
+          localVideoRef.current.play().catch(() => { });
         }
       } else {
         await getAudioStream();
@@ -989,7 +1021,7 @@ export default function Chat() {
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
             localVideoRef.current.muted = true;
-            localVideoRef.current.play().catch(() => {});
+            localVideoRef.current.play().catch(() => { });
           }
         } else {
           await getAudioStream();
@@ -1078,7 +1110,7 @@ export default function Chat() {
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
             localVideoRef.current.muted = true;
-            localVideoRef.current.play().catch(() => {});
+            localVideoRef.current.play().catch(() => { });
           }
         } else {
           await getAudioStream();
@@ -1391,7 +1423,7 @@ export default function Chat() {
     try {
       if (recorderRef.current) {
         // 停止但不发送
-        recorderRef.current.stop().catch(() => {});
+        recorderRef.current.stop().catch(() => { });
       }
     } finally {
       setIsRecording(false);
@@ -1512,7 +1544,7 @@ export default function Chat() {
       setTimeout(() => {
         if (cameraVideoRef.current) {
           cameraVideoRef.current.srcObject = stream;
-          cameraVideoRef.current.play().catch(() => {});
+          cameraVideoRef.current.play().catch(() => { });
         }
       }, 0);
     } catch (e) {
@@ -1732,6 +1764,45 @@ export default function Chat() {
     return roleAvatars[user?.role || ""] || null;
   };
 
+  // 过滤聊天中的通话信令类消息（例如首次紧急呼叫写入的 JSON 文本）
+  const isSignalMessage = (msg: ChatMessage): boolean => {
+    // 保留正式通话记录（voice_call/video_call）
+    if (msg.type === "voice_call" || msg.type === "video_call") return false;
+
+    const parseMaybeJson = (v: unknown): any | null => {
+      if (typeof v !== "string") return null;
+      const t = v.trim();
+      if (!(t.startsWith("{") && t.endsWith("}"))) return null;
+      try {
+        return JSON.parse(t);
+      } catch {
+        return null;
+      }
+    };
+
+    const obj = parseMaybeJson((msg as any).content);
+    if (!obj || typeof obj !== "object") return false;
+    const kind = obj.kind as string | undefined;
+    if (!kind) return false;
+    const signalKinds = new Set([
+      "voice_call_invite",
+      "voice_call_cancel",
+      "call_invite",
+      "call_cancel",
+      "call_response",
+      "call_end",
+      "webrtc_offer",
+      "webrtc_answer",
+      "webrtc_ice_candidate",
+    ]);
+    return signalKinds.has(kind);
+  };
+
+  const filteredMessages = useMemo(
+    () => messages.filter((m) => !isSignalMessage(m)),
+    [messages]
+  );
+
   // 处理语音通话
   const handleVoiceCall = async () => {
     if (callSession.isActive) {
@@ -1813,7 +1884,7 @@ export default function Chat() {
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
         localVideoRef.current.muted = true;
-        localVideoRef.current.play().catch(() => {});
+        localVideoRef.current.play().catch(() => { });
       }
     } catch (e) {
       message.error("未获得摄像头或麦克风权限，无法发起视频通话");
@@ -1891,6 +1962,44 @@ export default function Chat() {
       }
     };
   }, [callSession.isActive, callSession.status, callSession.startTime]);
+
+  // 如果通过 URL 带入 ?call=1，则在进入 Chat 后自动弹出接听框（若对方正邀请）
+  useEffect(() => {
+    if (shouldAutoPrompt && !inviteHandledOnceRef.current && !callSession.isActive) {
+      // 如果已经收到 invite，会在 handleCallInvite 中弹出；否则静待 socket 事件
+      inviteHandledOnceRef.current = true;
+      // 清理 URL 中的 ?call=1 等参数，避免历史返回再次触发
+      try { navigate(location.pathname, { replace: true }); } catch { }
+      try {
+        const pending = (WebSocketService as any).getLastCallInvite?.();
+        if (pending && (!id || pending.conversationId === id)) {
+          console.log('[Family Chat] use cached invite');
+          setCallInvite({
+            isVisible: true,
+            caller: pending.caller,
+            callerName: pending.callerName || pending.caller,
+            callType: pending.callType,
+            conversationId: pending.conversationId,
+          });
+          (WebSocketService as any).clearLastCallInvite?.();
+        }
+      } catch { }
+    }
+  }, [shouldAutoPrompt, callSession.isActive]);
+
+  // 接收方超时未接：弹窗出现后 60 秒自动结束并返回预警页
+  useEffect(() => {
+    if (callInvite.isVisible) {
+      const timer = setTimeout(() => {
+        setCallInvite({ isVisible: false });
+        // 记录未接（保存一条拒接记录）
+        void saveCallRecord("refusal", undefined, callInvite.caller);
+        // 返回预警页
+        navigate("/warnings", { replace: true });
+      }, 60000);
+      return () => clearTimeout(timer);
+    }
+  }, [callInvite.isVisible]);
 
   if (loading) {
     return (
@@ -2227,11 +2336,10 @@ export default function Chat() {
                 callSession.isActive && callSession.callType === "voice"
                   ? "#ff4d4f"
                   : "#52c41a",
-              border: `1px solid ${
-                callSession.isActive && callSession.callType === "voice"
-                  ? "#ff4d4f"
-                  : "#52c41a"
-              }`,
+              border: `1px solid ${callSession.isActive && callSession.callType === "voice"
+                ? "#ff4d4f"
+                : "#52c41a"
+                }`,
               borderRadius: "50%",
               width: "40px",
               height: "40px",
@@ -2260,11 +2368,10 @@ export default function Chat() {
                 callSession.isActive && callSession.callType === "video"
                   ? "#ff4d4f"
                   : "#1890ff",
-              border: `1px solid ${
-                callSession.isActive && callSession.callType === "video"
-                  ? "#ff4d4f"
-                  : "#1890ff"
-              }`,
+              border: `1px solid ${callSession.isActive && callSession.callType === "video"
+                ? "#ff4d4f"
+                : "#1890ff"
+                }`,
               borderRadius: "50%",
               width: "40px",
               height: "40px",
@@ -2291,7 +2398,7 @@ export default function Chat() {
         }}
       >
         <List
-          dataSource={messages}
+          dataSource={filteredMessages}
           split={false}
           renderItem={(item) => {
             const isCurrentUser = item.sender === currentUser?.username;
@@ -2395,10 +2502,10 @@ export default function Chat() {
                           {item.content}
                           {typeof (item as any).time === "number"
                             ? `（${Math.floor((item as any).time / 60)}:${(
-                                (item as any).time % 60
-                              )
-                                .toString()
-                                .padStart(2, "0")}）`
+                              (item as any).time % 60
+                            )
+                              .toString()
+                              .padStart(2, "0")}）`
                             : ""}
                         </span>
                       ) : item.type === "location" ? (

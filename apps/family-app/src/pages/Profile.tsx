@@ -53,6 +53,10 @@ const Profile: React.FC = () => {
   const handleLogout = () => {
     // 退出登录
     navigate("/login");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userInfo");
+    
   };
 
   return (

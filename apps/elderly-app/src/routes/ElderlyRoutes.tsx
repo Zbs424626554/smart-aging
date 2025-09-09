@@ -82,6 +82,7 @@ const RootRedirect: React.FC = () => {
 
   if (isLoggedIn === null) return null;
   if (!isLoggedIn) return <Navigate to="/login" replace />;
+  // 仅当解析到本端角色时才进入首页，避免误判为其他端
   if (resolvedRole === "elderly") return <Navigate to="/home" replace />;
   return <Navigate to="/login" replace />;
 };
