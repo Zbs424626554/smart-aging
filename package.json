@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "install:all": "npm install",
-    "start:server": "cd server && ts-node-dev src/index.ts",
+    "dev:server": "cd server && ts-node-dev src/index.ts",
     "dev:elderly": "cd apps/elderly-app && npm run dev",
     "dev:family": "cd apps/family-app && npm run dev",
     "dev:nurse": "cd apps/nurse-app && npm run dev",
