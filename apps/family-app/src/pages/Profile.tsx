@@ -71,12 +71,12 @@ const Profile: React.FC = () => {
           <div className={styles.profileDetails}>
             <div className={styles.profileName}>{userInfo.name}</div>
             <div className={styles.profilePhone}>{userInfo.phone}</div>
-            {/* <div className={styles.profileMembership}>
+            <div className={styles.profileMembership}>
               <Tag color="primary">{userInfo.memberLevel}</Tag>
               <span className={styles.profilePoints}>
                 积分: {userInfo.points}
               </span>
-            </div> */}
+            </div>
           </div>
           <Button className={styles.editProfileBtn} size="small" fill="outline">
             编辑
@@ -85,7 +85,7 @@ const Profile: React.FC = () => {
       </Card>
 
       {/* 会员信息 */}
-      {/* <Card className={styles.membershipCard}>
+      <Card className={styles.membershipCard}>
         <div className={styles.membershipHeader}>
           <div className={styles.membershipTitle}>
             <UserOutline className={styles.membershipIcon} />
@@ -107,7 +107,7 @@ const Profile: React.FC = () => {
             <div className={styles.itemValue}>{userInfo.points}</div>
           </div>
         </div>
-      </Card> */}
+      </Card>
 
       {/* 功能菜单 */}
       <Card className={styles.menuCard}>

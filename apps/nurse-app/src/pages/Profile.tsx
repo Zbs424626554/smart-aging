@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Avatar, Card, Typography, List, Button } from 'antd';
+import { Avatar, Typography, List } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
   CalendarOutlined,
   DollarOutlined,
   SafetyCertificateOutlined,
-  MessageOutlined,
-  EyeOutlined,
-  EditOutlined,
-  SettingOutlined,
-  MoreOutlined
+  MessageOutlined
 } from '@ant-design/icons';
 import { AuthService, type UserInfo } from '../services/auth.service';
 import './Profile.css';
@@ -40,8 +36,13 @@ const Profile: React.FC = () => {
         navigate('/home/message');
         break;
       default:
-      // 功能开发中
+
     }
+  };
+
+  const handleLogout = () => {
+    AuthService.logout();
+    navigate('/login', { replace: true });
   };
 
   const menuItems = [
@@ -58,12 +59,6 @@ const Profile: React.FC = () => {
       color: '#1890ff'
     },
     {
-      icon: <EyeOutlined style={{ color: '#52c41a' }} />,
-      title: '最近浏览',
-      count: 2,
-      color: '#52c41a'
-    },
-    {
       icon: <DollarOutlined style={{ color: '#faad14' }} />,
       title: '收入统计',
       count: 0,
@@ -74,35 +69,20 @@ const Profile: React.FC = () => {
       title: '资质认证',
       count: null,
       color: '#52c41a'
-    },
-    {
-      icon: <MessageOutlined style={{ color: '#722ed1' }} />,
-      title: '联系客服',
-      count: null,
-      color: '#722ed1'
     }
   ];
 
   return (
     <div className="profile-container">
-      {/* Status Bar */}
-
-
-      {/* Navigation Bar */}
-      <div className="nav-bar">
-        <div className="nav-title">个人中心</div>
-
-      </div>
-
       {/* Profile Header */}
       <div className="profile-header">
-        <div className="profile-edit">
-          <Button type="text" icon={<EditOutlined />} style={{ color: 'white' }} />
+        <div className="profile-edit" onClick={handleLogout} title="退出登录" style={{ cursor: 'pointer' }}>
+          <img src="../imgs/退出登录.png" alt="退出登录" />
         </div>
         <div className="profile-avatar">
           <Avatar
             size={80}
-            src={userInfo?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.username || 'nurse'}`}
+            src="/imgs/nurse.png"
           />
         </div>
         <div className="profile-info">
@@ -134,7 +114,7 @@ const Profile: React.FC = () => {
                     <span className="menu-count">({item.count})</span>
                   )}
                 </div>
-                <div className="menu-arrow">›</div>
+                <div className="menu-arrow">&gt;</div>
               </div>
             </List.Item>
           )}

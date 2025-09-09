@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Row, Col, Avatar, List, Tag, Space, Button, Divider } from 'antd';
+import { Typography, Row, Col, Avatar, Tag, Button } from 'antd';
 import {
   CalendarOutlined,
   ClockCircleOutlined,
@@ -14,7 +14,7 @@ import { AuthService } from '../services/auth.service';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface ScheduleItem {
   id: string;
@@ -25,20 +25,20 @@ interface ScheduleItem {
   status: 'upcoming' | 'in-progress' | 'completed';
 }
 
-interface NearbyRequest {
-  id: string;
-  title: string;
-  distance: number;
-  price: number;
-  elderlyName: string;
-  urgent: boolean;
-}
+// interface NearbyRequest {
+//   id: string;
+//   title: string;
+//   distance: number;
+//   price: number;
+//   elderlyName: string;
+//   urgent: boolean;
+// }
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = AuthService.getCurrentUser();
   const [todaySchedule, setTodaySchedule] = useState<ScheduleItem[]>([]);
-  const [nearbyRequests, setNearbyRequests] = useState<NearbyRequest[]>([]);
+  // const [nearbyRequests, setNearbyRequests] = useState<NearbyRequest[]>([]);
 
   // 模拟数据
   useEffect(() => {
@@ -70,25 +70,8 @@ const Home: React.FC = () => {
       }
     ]);
 
-    // 附近服务需求
-    setNearbyRequests([
-      {
-        id: '1',
-        title: '居家护理服务',
-        distance: 2.5,
-        price: 150,
-        elderlyName: '刘奶奶',
-        urgent: true
-      },
-      {
-        id: '2',
-        title: '康复护理服务',
-        distance: 3.2,
-        price: 180,
-        elderlyName: '赵爷爷',
-        urgent: false
-      }
-    ]);
+    // 附近服务需求（未在本页面展示，保留接口示例）
+    // setNearbyRequests([...])
   }, []);
 
   // 获取当前时间
@@ -183,9 +166,9 @@ const Home: React.FC = () => {
       <div className="schedule-section">
         <div className="section-header">
           <div className="section-title">今日排班</div>
-          <div className="section-action" onClick={() => navigate('/home/schedule')}>
+          <Button type="link" size="small" className="section-action-btn" onClick={() => navigate('/home/schedule')}>
             查看全部 <RightOutlined />
-          </div>
+          </Button>
         </div>
 
         {todaySchedule.length > 0 ? (
@@ -225,69 +208,8 @@ const Home: React.FC = () => {
         )}
       </div>
 
-      {/* 附近服务需求 */}
-      <div className="nearby-section">
-        <div className="section-header">
-          <div className="section-title">附近服务需求</div>
-          <div className="section-action" onClick={() => navigate('/home/orders')}>
-            查看全部 <RightOutlined />
-          </div>
-        </div>
 
-        {nearbyRequests.length > 0 ? (
-          <div className="nearby-list">
-            {nearbyRequests.map((item) => (
-              <div key={item.id} className="nearby-item">
-                <div className="nearby-content">
-                  <div className="nearby-header">
-                    <span className="nearby-title">{item.title}</span>
-                    {item.urgent && <Tag color="red" className="urgent-tag">紧急</Tag>}
-                  </div>
-                  <div className="nearby-details">
-                    <div className="nearby-elderly">
-                      <UserOutlined /> {item.elderlyName}
-                    </div>
-                    <div className="nearby-distance">
-                      <EnvironmentOutlined /> 距离{item.distance}km
-                    </div>
-                  </div>
-                </div>
-                <div className="nearby-price">
-                  <div className="price-amount">¥{item.price}</div>
-                  <Button size="small" type="primary" className="view-btn">查看</Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-nearby">附近暂无服务需求</div>
-        )}
-      </div>
 
-      {/* 快捷功能 */}
-      <div className="shortcuts-section">
-        <div className="section-title">快捷功能</div>
-        <Row gutter={[16, 16]} className="shortcuts-row">
-          <Col span={8}>
-            <div className="shortcut-item" onClick={() => navigate('/home/schedule')}>
-              <CalendarOutlined className="shortcut-icon" />
-              <div className="shortcut-label">查看排班</div>
-            </div>
-          </Col>
-          <Col span={8}>
-            <div className="shortcut-item" onClick={() => navigate('/home/income')}>
-              <DollarOutlined className="shortcut-icon" />
-              <div className="shortcut-label">收入明细</div>
-            </div>
-          </Col>
-          <Col span={8}>
-            <div className="shortcut-item" onClick={() => navigate('/home/certification')}>
-              <StarOutlined className="shortcut-icon" />
-              <div className="shortcut-label">资质认证</div>
-            </div>
-          </Col>
-        </Row>
-      </div>
     </div>
   );
 };

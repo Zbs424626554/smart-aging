@@ -3,12 +3,13 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IApprove extends Document {
     nurseId: mongoose.Types.ObjectId;     // 护工ID
     nurseName: string;                    // 护工姓名
+    phone?: string;                       // 联系电话
     idcard: string;                       // 身份证号
     certificateImage: string;             // 护理证和健康证图片
     idCardFront: string;                  // 身份证正面照片
     idCardBack?: string;                  // 身份证背面照片（可选）
     certificateType: 'nursing' | 'health' | 'both'; // 证书类型
-    certificateNumber?: string;           // 证书编号
+    certificateNo?: string;               // 证书编号
     status: 'pending' | 'approved' | 'rejected'; // 审核状态
     submitTime: Date;                     // 提交时间
     reviewTime?: Date;                    // 审核时间
@@ -24,6 +25,11 @@ const approveSchema = new Schema({
         required: false
     },
     nurseName: {
+        type: String,
+        required: false,
+        trim: true
+    },
+    phone: {
         type: String,
         required: false,
         trim: true
@@ -50,7 +56,7 @@ const approveSchema = new Schema({
         enum: ['nursing', 'health', 'both'],
         required: false
     },
-    certificateNumber: {
+    certificateNo: {
         type: String,
         required: false
     },

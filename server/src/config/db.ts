@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 export const connectDB = async () => {
-  const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  const uri = process.env.MONGO_URI || process.env.MONGO_URI;
   if (!uri) {
     console.warn('⚠️  MongoDB URI 未配置，使用默认连接');
     try {

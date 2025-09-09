@@ -7,4 +7,4 @@
 - `api-documentation.md`：详细API文档，包含接口参数、返回值、权限等。
 - `frontend-architecture.md`：前端架构说明，介绍各端技术栈、目录结构、页面与接口关系。
 
-建议先查阅 `api-summary.md` 了解全局，再结合 `api-documentation.md` 和 `database-design.md` 进行开发。
+建议先查阅 `api-summary.md` 了解全局，再结合 `api-documentation.md` 和 `database-design.md` 进行开发。 

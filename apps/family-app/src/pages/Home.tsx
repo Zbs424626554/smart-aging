@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Home.module.css';
-import {Popup, Space, Button,Form ,Input } from 'antd-mobile'
+import { Popup, Space, Button, Form, Input } from 'antd-mobile'
 import { EyeInvisibleOutline, EyeOutline } from 'antd-mobile-icons'
 import axios from 'axios';
 // axios.defaults.baseURL='http://localhost:3001'
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const [visible,setvisible]=useState(false)
+  const [visible, setvisible] = useState(false)
   const [Visible, setVisible] = useState(false)
   const handleFunctionClick = (type: string) => {
     // 功能点击处理
   };
-  const [form]=Form.useForm()
+  const [form] = Form.useForm()
 
   const handleQuickAction = (action: string) => {
     // 根据操作类型进行导航
@@ -75,7 +75,7 @@ const Home: React.FC = () => {
   ];
 
 
-  const onFinish =async (values: any) => {
+  const onFinish = async (values: any) => {
     // Dialog.alert({
     //   content: <pre>{JSON.stringify(values, null, 2)}</pre>,
     // })
@@ -153,11 +153,11 @@ const Home: React.FC = () => {
             form={form}
             onFinish={onFinish}
             footer={
-              <div style={{textAlign:'center'}}>
-                <Button style={{marginBottom:'10px'}} block type="submit" color="primary" size="large">
-                提交
-              </Button>
-              <span style={{color:'grey'}}>添加的老人会默认绑定到当前登录家属</span>
+              <div style={{ textAlign: 'center' }}>
+                <Button style={{ marginBottom: '10px' }} block type="submit" color="primary" size="large">
+                  提交
+                </Button>
+                <span style={{ color: 'grey' }}>添加的老人会默认绑定到当前登录家属</span>
               </div>
             }
           >
@@ -170,24 +170,24 @@ const Home: React.FC = () => {
             </Form.Item>
 
             <Form.Item
-            label='密码'
-            name='password'
-            extra={
-              <div className={styles.eye}>
-                {!Visible ? (
-                  <EyeInvisibleOutline onClick={() => setVisible(true)} />
-                ) : (
-                  <EyeOutline onClick={() => setVisible(false)} />
-                )}
-              </div>
-            }
-          >
-            <Input
-              placeholder='请输入密码'
-              clearable
-              type={Visible ? 'text' : 'password'}
-            />
-          </Form.Item>
+              label='密码'
+              name='password'
+              extra={
+                <div className={styles.eye}>
+                  {!Visible ? (
+                    <EyeInvisibleOutline onClick={() => setVisible(true)} />
+                  ) : (
+                    <EyeOutline onClick={() => setVisible(false)} />
+                  )}
+                </div>
+              }
+            >
+              <Input
+                placeholder='请输入密码'
+                clearable
+                type={Visible ? 'text' : 'password'}
+              />
+            </Form.Item>
 
             <Form.Item
               name="phone"

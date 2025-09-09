@@ -1,4 +1,3 @@
-import { message } from 'antd';
 import OpenAI from 'openai';
 type Role = 'system' | 'user' | 'assistant'
 export interface ChatMessage {
@@ -10,7 +9,7 @@ const createBaichuanClient = () => {
   return new OpenAI({
     apiKey: import.meta.env.VITE_DASHSCOPE_API_KEY,
     baseURL: "https://api.baichuan-ai.com/v1",
-    dangerouslyAllowBrowser: true // 允许在浏览器中使用跳过检查
+    dangerouslyAllowBrowser: true // 允许在浏览器中使用
   });
 };
 const client = createBaichuanClient();
@@ -63,6 +62,7 @@ const callBaichuan = async (messages: any[], model: string = "Baichuan2-Turbo") 
       temperature: 0.7,
       max_tokens: 1000
     });
+
     return completion.choices[0].message.content;
   } catch (error: any) {
     console.error("API调用失败:", error);
@@ -82,7 +82,7 @@ export const askQuestion = async (question: string, model = "Baichuan2-Turbo") =
 export const generateHealthAdvice = async (healthData: any, elderlyName: string) => {
   console.log('🔍 开始生成AI健康建议...');
   console.log('📊 健康数据:', healthData);
-  console.log('👴 老人姓名:', elderlyName,);
+  console.log('👴 老人姓名:', elderlyName);
 
   // 检查API密钥是否配置
   if (!import.meta.env.VITE_DASHSCOPE_API_KEY) {

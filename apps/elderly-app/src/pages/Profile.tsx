@@ -281,7 +281,7 @@ const Profile: React.FC = () => {
 
       <List header="个人中心">
         <List.Item onClick={showBasicInfo}>基础资料</List.Item>
-        <List.Item onClick={() => navigate("/health")}>健康档案</List.Item>
+        <List.Item onClick={() => navigate("/home/health")}>健康档案</List.Item>
         <List.Item arrow={false} onClick={showAccountSecurity}>
           修改密码
         </List.Item>

@@ -81,6 +81,10 @@
     top: 16px;
     right: 16px;
 }
+.profile-edit img{
+    width: 35px;
+    height: 35px;
+}
 
 .profile-edit .ant-btn {
     color: white;

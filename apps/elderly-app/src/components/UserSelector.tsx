@@ -264,7 +264,6 @@ export default function UserSelector({
                     <Badge
                       content={getRoleName(user.role)}
                       style={{
-                        padding: "6px",
                         "--right": "0",
                         "--top": "0",
                         "--background": getRoleColor(user.role),

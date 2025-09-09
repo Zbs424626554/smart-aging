@@ -22,7 +22,16 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@smart-aging/packages": [
+        "../../packages/index.ts"
+      ],
+      "@smart-aging/packages/*": [
+        "../../packages/*"
+      ]
+    }
   },
   "include": [
     "src"
