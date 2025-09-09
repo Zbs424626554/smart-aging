@@ -29,15 +29,18 @@ const Login: React.FC = () => {
       console.log("用户角色:", role);
 
       const roleRedirectMap: Record<string, string> = {
-        elderly: "http://localhost:5173/home/call",
-        family: "http://localhost:5174/home",
-        nurse: "http://localhost:5175/home",
+        elderly: "http://localhost:5173/",
+        family: "http://localhost:5174/",
+        nurse: "http://localhost:5175/",
       };
 
       const redirectUrl = roleRedirectMap[role];
       if (redirectUrl) {
         setTimeout(() => {
-          window.location.href = redirectUrl;
+          // 通过 URL 参数将 token 传递给目标端，目标端 RootRedirect 读取后写入 localStorage 并清理URL
+          const url = new URL(redirectUrl);
+          url.searchParams.set('ssoToken', response.data.token);
+          window.location.href = url.toString();
         }, 1000); // 增加延迟时间，让用户看到成功消息
       } else {
         console.error("未知的用户角色:", role);

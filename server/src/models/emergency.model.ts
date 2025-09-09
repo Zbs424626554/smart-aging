@@ -15,6 +15,7 @@ export interface IEmergencyAlert extends Document {
   elderlyName?: string;
   contactName?: string;
   contactPhone?: string;
+  callStatus?: 'ringing' | 'connected' | 'ended' | 'not_answered';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -55,6 +56,11 @@ const emergencyAlertSchema = new Schema({
   },
   contactPhone: {
     type: String
+  },
+  callStatus: {
+    type: String,
+    enum: ['ringing', 'connected', 'ended', 'not_answered'],
+    default: undefined
   },
   status: {
     type: String,

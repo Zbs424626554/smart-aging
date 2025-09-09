@@ -26,25 +26,25 @@ const analyzeWithAI = async (input: EmergencyAnalysisInput): Promise<EmergencyAn
   const client = createBaichuanClient();
 
   const prompt = `
-请分析以下紧急情况信息，并提供专业的风险评估和建议。
+你是紧急事件助手。请严格按照要求输出，仅输出一个合法 JSON 对象，不要任何 Markdown、反引号、注释或额外文字。
 
 语音转写内容：${input.transcript || '无语音内容'}
 位置信息：${input.location ? `经度${input.location.coordinates[0]}, 纬度${input.location.coordinates[1]}` : '无位置信息'}
 
-请按照以下JSON格式返回分析结果：
+返回格式示例（字段必须齐全）：
 {
-  "riskLevel": "low/medium/high",
+  "riskLevel": "low|medium|high",
   "summary": "简要分析总结",
   "detectedKeywords": ["关键词1", "关键词2"],
   "recommendations": ["建议1", "建议2", "建议3"],
-  "needCallEmergency": true/false
+  "needCallEmergency": true
 }
 
-请确保：
-1. riskLevel根据紧急程度判断：low(轻微), medium(中等), high(严重)
-2. detectedKeywords提取语音中的关键信息
-3. recommendations提供具体的行动建议
-4. needCallEmergency根据风险等级判断是否需要立即拨打急救电话
+说明：
+- riskLevel 根据紧急程度判断：low(轻微), medium(中等), high(严重)
+- detectedKeywords 提取语音关键信息
+- recommendations 提供可执行建议
+- needCallEmergency 表示是否需要立即拨打急救电话
 `;
 
   try {
@@ -63,7 +63,7 @@ const analyzeWithAI = async (input: EmergencyAnalysisInput): Promise<EmergencyAn
     }
 
     try {
-      const analysis = JSON.parse(response);
+      const analysis = safeParseJson(response);
       return {
         riskLevel: analysis.riskLevel || 'medium',
         summary: analysis.summary || 'AI分析完成',
@@ -124,6 +124,21 @@ export async function analyzeEmergency(input: EmergencyAnalysisInput): Promise<E
     console.log('未配置AI API密钥，使用规则分析');
     return fallbackAnalysis(input);
   }
+}
+
+
+// 安全解析：清理 Markdown/围栏，仅保留第一个 JSON 对象
+function safeParseJson(text: string): any {
+  let s = (text || '').trim();
+  // 去除 ```json / ``` 等围栏
+  s = s.replace(/^```json\s*/i, '').replace(/```$/i, '').replace(/```/g, '').trim();
+  // 截取第一个 { 到最后一个 }
+  const i = s.indexOf('{');
+  const j = s.lastIndexOf('}');
+  if (i >= 0 && j >= i) {
+    s = s.slice(i, j + 1);
+  }
+  return JSON.parse(s);
 }
 
 

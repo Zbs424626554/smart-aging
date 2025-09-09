@@ -81,11 +81,11 @@ export class AuthController {
         status: user.status,
         createdTime: user.createdTime,
       };
-      // 设置token到cookie
+      // 设置token到cookie（本地开发不要显式设置domain，避免浏览器丢弃 localhost Cookie）
       res.cookie("token", token, {
         httpOnly: true,
-        domain: "localhost",
         sameSite: "lax",
+        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       return res.json({

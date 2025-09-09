@@ -1,19 +1,19 @@
-// WebSocket服务，用于实时消息通信
+// WebSocket服务（家属端）
 export interface WebSocketMessage {
   type:
-    | "message"
-    | "user_online"
-    | "user_offline"
-    | "typing"
-    | "stop_typing"
-    | "call_invite"
-    | "call_response"
-    | "call_cancel"
-    | "call_end"
-    | "webrtc_offer"
-    | "webrtc_answer"
-    | "webrtc_ice_candidate"
-    | "conversation_updated";
+  | "message"
+  | "user_online"
+  | "user_offline"
+  | "typing"
+  | "stop_typing"
+  | "call_invite"
+  | "call_response"
+  | "call_cancel"
+  | "call_end"
+  | "webrtc_offer"
+  | "webrtc_answer"
+  | "webrtc_ice_candidate"
+  | "conversation_updated";
   data: any;
   conversationId?: string;
   sender?: string;
@@ -31,8 +31,10 @@ export class WebSocketService {
   private readonly maxBackoffMs = 15000;
   private isConnecting = false;
   private currentUser: string | null = null;
+  // 记录最近一次收到但可能“页面尚未准备好”的来电邀请
+  private lastCallInvite: any | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): WebSocketService {
     if (!WebSocketService.instance) {
@@ -96,8 +98,16 @@ export class WebSocketService {
         };
 
         this.ws.onmessage = (event) => {
+          // 调试：日志打印消息类型，辅助定位通话邀请是否发出
           try {
             const message: WebSocketMessage = JSON.parse(event.data);
+            if (message?.type === 'call_invite' || message?.type === 'webrtc_offer') {
+              console.log('[WS] recv', message.type, message);
+            }
+            // 缓存最后一次来电邀请，便于路由跳转后仍能弹窗
+            if (message?.type === 'call_invite') {
+              this.lastCallInvite = message.data;
+            }
             this.handleMessage(message);
           } catch (error) {
             console.warn("解析WebSocket消息失败:", error);
@@ -134,7 +144,7 @@ export class WebSocketService {
           if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
             try {
               this.ws.close();
-            } catch {}
+            } catch { }
             this.isConnecting = false;
             reject(new Error("WebSocket连接超时"));
             this.scheduleReconnect();
@@ -490,6 +500,16 @@ export class WebSocketService {
   // 获取当前用户
   getCurrentUser(): string | null {
     return this.currentUser;
+  }
+
+  // 供页面在挂载后主动取出最近一次来电邀请
+  getLastCallInvite(): any | null {
+    return this.lastCallInvite;
+  }
+
+  // 清空最近一次来电邀请
+  clearLastCallInvite() {
+    this.lastCallInvite = null;
   }
 }
 

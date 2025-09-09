@@ -58,8 +58,10 @@ function toObjectIdOrNull(id: string | null): mongoose.Types.ObjectId | null {
 }
 
 // UI 层状态（保留你原来的 4 个）
+// UI 层状态（保留你原来的 4 个）
 type UiStatus = 'assigned' | 'processing' | 'completed' | 'cancelled';
 
+// 映射：DB -> UI（按你现在的四态模型）
 // 映射：DB -> UI（按你现在的四态模型）
 function mapDbToUiStatus(status: IOrder['status']): UiStatus {
   switch (status) {
@@ -74,6 +76,7 @@ function mapDbToUiStatus(status: IOrder['status']): UiStatus {
   }
 }
 
+// 映射：UI -> DB（无取消态，收到 cancelled 时这里直接按 completed 处理，避免前端报错）
 // 映射：UI -> DB（无取消态，收到 cancelled 时这里直接按 completed 处理，避免前端报错）
 function mapUiToDbStatus(status: UiStatus): IOrder['status'] {
   switch (status) {
@@ -91,6 +94,7 @@ function mapUiToDbStatus(status: UiStatus): IOrder['status'] {
   }
 }
 
+// 列出可接单（未分配护士且处于待处理/或已指派给我但未开始）
 // 列出可接单（未分配护士且处于待处理/或已指派给我但未开始）
 router.get('/available', async (req: Request, res: Response) => {
   try {
@@ -226,6 +230,7 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
   }
 });
 
+// 获取订单详情
 // 获取订单详情
 router.get('/detail/:id', async (req: Request, res: Response) => {
   try {

@@ -17,12 +17,14 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   redirectTo = '/login'
 }) => {
   const location = useLocation();
-  const isLoggedIn = AuthService.isLoggedIn();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const role = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+  const isLoggedIn = !!(token || role);
   const currentRole = AuthService.getCurrentRole();
 
   // 如果未登录，重定向到登录页
   if (!isLoggedIn) {
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
+    return <Navigate to={'/'} state={{ from: location }} replace />;
   }
 
   // 如果需要特定角色权限
@@ -31,23 +33,8 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
     const hasPermission = requiredRoles.includes(currentRole);
 
     if (!hasPermission) {
-      // 根据角色重定向到对应的应用
-      const roleRedirectMap: Record<UserRole, string> = {
-        elderly: 'http://localhost:5174',
-        family: 'http://localhost:5173',
-        nurse: 'http://localhost:5175',
-        admin: 'http://localhost:5176'
-      };
-
-      const redirectPath = roleRedirectMap[currentRole] || '/login';
-
-      // 如果是跨应用重定向，使用window.location
-      if (redirectPath.startsWith('http')) {
-        window.location.href = redirectPath;
-        return null;
-      }
-
-      return <Navigate to={redirectPath} replace />;
+      // 回根路径让 RootRedirect 统一处理
+      return <Navigate to={'/'} replace />;
     }
   }
 

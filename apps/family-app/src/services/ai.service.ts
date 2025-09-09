@@ -1,9 +1,9 @@
 import { message } from 'antd';
 import OpenAI from 'openai';
-type Role='system'|'user'|'assistant'
-export interface ChatMessage{
-  role:Role;
-  content:string
+type Role = 'system' | 'user' | 'assistant'
+export interface ChatMessage {
+  role: Role;
+  content: string
 }
 // 初始化OpenAI客户端（使用百川智能API）
 const createBaichuanClient = () => {
@@ -17,30 +17,30 @@ const client = createBaichuanClient();
 
 
 //SDK接口调用
-export const streamChat=async(messages:ChatMessage[],
-  onChunk:(chunk:string)=>void,
-  model:string='Baichuan2-Turbo')=>{
-    if (!Array.isArray(messages) || messages.length == 0) {
-      throw new Error("messages 必须是至少一条消息的数组");
-    }
-   
-    const systemMessage:ChatMessage = {
-      role: "system",
-      content: "请用Markdown格式回复。"
-    };
-  const completion=await client.chat.completions.create(
+export const streamChat = async (messages: ChatMessage[],
+  onChunk: (chunk: string) => void,
+  model: string = 'Baichuan2-Turbo') => {
+  if (!Array.isArray(messages) || messages.length == 0) {
+    throw new Error("messages 必须是至少一条消息的数组");
+  }
+
+  const systemMessage: ChatMessage = {
+    role: "system",
+    content: "请用Markdown格式回复。"
+  };
+  const completion = await client.chat.completions.create(
     {
       model,
       messages: [systemMessage, ...messages],
-      temperature:0.7,
-      stream:true,
-      max_tokens:1000
+      temperature: 0.7,
+      stream: true,
+      max_tokens: 1000
     }
   )
-  let fullText=''
+  let fullText = ''
   console.log(messages);
-  
-  for await(const chunk of completion){
+
+  for await (const chunk of completion) {
     console.log(chunk.choices[0].delta.content);
     const delta = chunk.choices[0].delta.content;
     if (delta) {
@@ -54,7 +54,7 @@ export const streamChat=async(messages:ChatMessage[],
 
 
 // 调用百川智能模型
-const callBaichuan = async (messages: any[], model:string = "Baichuan2-Turbo") => {
+const callBaichuan = async (messages: any[], model: string = "Baichuan2-Turbo") => {
 
   try {
     const completion = await client.chat.completions.create({
@@ -130,22 +130,7 @@ export const generateHealthAdvice = async (healthData: any, elderlyName: string)
 
     // 尝试解析JSON响应
     try {
-      // 清理AI响应中的Markdown标记
-      let cleanResponse = response;
-
-      // 移除开头的 ```json 和结尾的 ```
-      cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-
-      // 如果还有 ``` 标记，全部移除
-      cleanResponse = cleanResponse.replace(/```/g, '');
-
-      // 移除开头和结尾的空白字符
-      cleanResponse = cleanResponse.trim();
-
-      console.log('🧹 清理后的响应:', cleanResponse);
-
-      const parsedResponse = JSON.parse(cleanResponse);
-      // console.log('✅ AI响应解析成功:', parsedResponse);
+      const parsedResponse = safeParseJson(response);
       return parsedResponse.advice || [];
     } catch (parseError) {
       // 如果JSON解析失败，返回默认建议
@@ -179,4 +164,15 @@ const getDefaultAdvice = () => {
     }
   ];
 };
+
+// 统一的 JSON 解析辅助：清理 Markdown/围栏并截取 JSON
+function safeParseJson(text: string) {
+  if (!text) throw new Error('empty');
+  let s = String(text);
+  s = s.replace(/^```json\s*/i, '').replace(/```$/i, '').replace(/```/g, '').trim();
+  const i = s.indexOf('{');
+  const j = s.lastIndexOf('}');
+  if (i >= 0 && j >= i) s = s.slice(i, j + 1);
+  return JSON.parse(s);
+}
 

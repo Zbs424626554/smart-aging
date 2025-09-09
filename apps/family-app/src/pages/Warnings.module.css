@@ -47,7 +47,7 @@
 
 .stats-content {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
@@ -101,11 +101,20 @@
 
 .warning-card.handled {
   opacity: 0.6;
-  border-left-color: #28a745;
+  filter: grayscale(0.2);
 }
 
-.warning-card:not(.handled) {
-  border-left-color: #ffc107;
+/* 按紧急程度着色左侧条 */
+.warning-card.emergency {
+  border-left-color: #ff6b6b;
+}
+
+.warning-card.warning {
+  border-left-color: #ffa726;
+}
+
+.warning-card.reminder {
+  border-left-color: #42a5f5;
 }
 
 .warning-header {
