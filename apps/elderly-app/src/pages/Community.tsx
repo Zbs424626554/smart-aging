@@ -379,7 +379,6 @@ const Community: React.FC = () => {
       setCommentDrafts((prev) => ({ ...prev, [post.id]: "" }));
       setCommentingPostId(null);
       setReplyTarget(null);
-      Toast.show({ content: "评论成功" });
     } catch (err: any) {
       Toast.show({ content: err?.message || "评论失败" });
     } finally {
