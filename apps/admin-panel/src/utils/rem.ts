@@ -1,4 +1,4 @@
-const BASE_SIZE = 100; // 1rem = 100px (基于750px设计稿)
+const BASE_SIZE = 130; // 1rem = 130px (放大字号以便老人阅读)
 
 export const setRem = () => {
   const scale = document.documentElement.clientWidth / 750;

@@ -4,13 +4,23 @@ export interface ElderHealthArchiveDto {
   _id?: string;
   elderID: string;
   name: string;
+  gender?: string;
   age: number;
   phone: string;
   address?: string;
   emcontact: { username: string; phone: string; realname?: string };
   medicals: string[];
   allergies: string[];
-  useMedication?: { name: string; time: string }[];
+  // 兼容旧结构：{ name, time }
+  useMedication?: Array<{ name: string; time?: string; times?: string[] }>;
+  // 扩展：健康状态字段与时间
+  heightCm?: number;
+  weightKg?: number;
+  heartRate?: number;
+  bloodPressure?: string;
+  temperature?: number;
+  oxygenLevel?: number;
+  bloodSugar?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -21,6 +31,28 @@ export class ElderHealthService {
       "/elderhealth/me"
     );
     return data || null;
+  }
+
+  // newDevelop: 删除用药时间设置
+  static async deleteMedicationND(
+    name: string,
+    time?: string
+  ): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/medication/delete",
+      { name, time }
+    );
+    // 广播档案更新事件，便于全局用药提醒组件即时刷新
+    try {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("elderhealth:archiveUpdated", { detail: data })
+        );
+      }
+    } catch {
+      // ignore
+    }
+    return data as ElderHealthArchiveDto;
   }
 
   static async getArchiveByElderId(
@@ -58,6 +90,22 @@ export class ElderHealthService {
     return data as ElderHealthArchiveDto;
   }
 
+  static async updateGender(gender: string): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/gender",
+      { gender }
+    );
+    return data as ElderHealthArchiveDto;
+  }
+
+  static async updateName(name: string): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/name",
+      { name }
+    );
+    return data as ElderHealthArchiveDto;
+  }
+
   static async addMedical(item: string): Promise<ElderHealthArchiveDto> {
     const { data } = await http.post<ElderHealthArchiveDto>(
       "/elderhealth/medicals",
@@ -76,12 +124,22 @@ export class ElderHealthService {
 
   static async addMedication(
     name: string,
-    time: string
+    payloadTimes: string[]
   ): Promise<ElderHealthArchiveDto> {
     const { data } = await http.post<ElderHealthArchiveDto>(
       "/elderhealth/medication",
-      { name, time }
+      { name, times: payloadTimes }
     );
+    // 广播档案更新事件，便于全局用药提醒组件即时刷新
+    try {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("elderhealth:archiveUpdated", { detail: data })
+        );
+      }
+    } catch {
+      // ignore
+    }
     return data as ElderHealthArchiveDto;
   }
 
@@ -89,6 +147,23 @@ export class ElderHealthService {
     const { data } = await http.post<ElderHealthArchiveDto>(
       "/elderhealth/age",
       { age }
+    );
+    return data as ElderHealthArchiveDto;
+  }
+
+  // newDevelop: 更新身高/体重
+  static async updateHeight(heightCm: number): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/height",
+      { heightCm }
+    );
+    return data as ElderHealthArchiveDto;
+  }
+
+  static async updateWeight(weightKg: number): Promise<ElderHealthArchiveDto> {
+    const { data } = await http.post<ElderHealthArchiveDto>(
+      "/elderhealth/weight",
+      { weightKg }
     );
     return data as ElderHealthArchiveDto;
   }

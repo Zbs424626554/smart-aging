@@ -19,14 +19,15 @@ export interface RequestConfig extends AxiosRequestConfig {
 const getApiBaseUrl = () => {
   // 在浏览器环境中，使用import.meta.env（Vite）或window.location
   if (typeof window !== "undefined") {
-    // 开发环境
-    if (
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1"
-    ) {
-      return "http://localhost:3001/api";
+    const { protocol, hostname, port } = window.location;
+    const isDevPort = /^(5173|5174|5175|5176)$/.test(port || "");
+    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+
+    // 本地或Vite开发端口（包括局域网IP访问开发服务器）统一转发到后端3001
+    if (isLocalHost || isDevPort) {
+      return `${protocol}//${hostname}:3001/api`;
     }
-    // 生产环境
+    // 生产环境或已配置反向代理
     return "/api";
   }
   // 服务端环境

@@ -6,15 +6,13 @@ import {
   Empty,
   SpinLoading,
   NavBar,
-  Button,
-  Toast,
 } from "antd-mobile";
-import { MessageOutline } from "antd-mobile-icons";
+import { RedoOutline } from "antd-mobile-icons";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { MessageService, type ChatItem } from "../services/message.service";
-import UserSelector from "../components/UserSelector";
-import type { User } from "../services/user.service";
+import { UserService } from "../services/user.service";
+
 import { useNavigate } from "react-router-dom";
 import WebSocketService from "../services/websocket.service";
 
@@ -43,9 +41,9 @@ export default function Message() {
   const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatList, setChatList] = useState<ChatContact[]>([]);
-  const [userSelectorVisible, setUserSelectorVisible] = useState(false);
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [friendPreview, setFriendPreview] = useState<{ createdAt: string; fromName: string } | null>(null);
 
   // 获取当前用户信息
   const getCurrentUser = () => {
@@ -119,6 +117,17 @@ export default function Message() {
         // API返回的数据格式不正确
         setChatList([]);
       }
+      // 加载好友申请预览
+      try {
+        const reqResp = await UserService.getReceivedFriendRequests({ toUserId: currentUser.id || currentUser._id });
+        const reqList = (reqResp as any)?.data?.list || [];
+        if (Array.isArray(reqList) && reqList.length > 0) {
+          const first = reqList[0];
+          setFriendPreview({ createdAt: first.createdAt, fromName: first.fromRealname || first.fromUsername || "" });
+        } else {
+          setFriendPreview(null);
+        }
+      } catch { }
     } catch (error) {
       console.error("加载对话列表失败:", error);
       setChatList([]);
@@ -153,14 +162,14 @@ export default function Message() {
   };
 
   // 处理对话创建/更新事件
-  const handleConversationUpdate = (data: any) => {
+  const handleConversationUpdate = (_data: any) => {
     // 收到对话更新事件
     // 延迟刷新，避免频繁更新
     debouncedRefreshChatList();
   };
 
   // 处理新消息事件
-  const handleNewMessage = (data: any) => {
+  const handleNewMessage = (_data: any) => {
     // 收到新消息事件
     // 延迟刷新聊天列表以更新最后消息
     debouncedRefreshChatList();
@@ -308,106 +317,14 @@ export default function Message() {
     loadChatList(true); // 手动刷新时显示加载圈
   };
 
-  // 开始新聊天
-  const handleStartNewChat = () => {
-    setUserSelectorVisible(true);
+  // 跳转到新朋友（好友申请）页
+  const handleGoNewFriends = () => {
+    navigate('/addFriends');
   };
 
-  // 处理用户选择
-  const handleUserSelect = async (user: User) => {
-    // 选择了用户
-
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      Toast.show({
-        icon: "fail",
-        content: "请先登录",
-      });
-      return;
-    }
-
-    try {
-      // 显示加载状态
-      Toast.show({
-        icon: "loading",
-        content: "创建对话中...",
-        duration: 0,
-      });
-
-      // 准备参与者数据
-      const participants = [
-        {
-          username: currentUser.username,
-          realname: currentUser.realname || currentUser.username,
-          role: currentUser.role,
-        },
-        {
-          username: user.username,
-          realname: user.realname || user.username,
-          role: user.role,
-        },
-      ];
-
-      // 调用创建对话接口
-      const response = await MessageService.createConversation({
-        participants,
-        initialMessage: {
-          content: "你好",
-          type: "text",
-        },
-      });
-
-      // 隐藏加载状态
-      Toast.clear();
-
-      // 创建对话响应
-
-      if (response && response.conversationId) {
-        // 关闭用户选择弹窗
-        setUserSelectorVisible(false);
-
-        // 跳转到聊天页面
-        navigate(`/chat/${response.conversationId}`);
-
-        // 刷新对话列表
-        loadChatList();
-
-        // 显示成功提示
-        if (response.isExisting) {
-          Toast.show({
-            icon: "success",
-            content: "对话已存在，跳转中...",
-          });
-        } else {
-          Toast.show({
-            icon: "success",
-            content: "对话创建成功",
-          });
-        }
-      } else {
-        console.error("创建对话失败，响应数据:", response);
-        Toast.show({
-          icon: "fail",
-          content: response?.message || "创建对话失败，请重试",
-        });
-      }
-    } catch (error) {
-      console.error("创建对话失败:", error);
-      Toast.clear();
-      Toast.show({
-        icon: "fail",
-        content: "创建对话失败，请检查网络连接",
-      });
-    }
-  };
-
-  // 关闭用户选择弹窗
-  const handleCloseUserSelector = () => {
-    setUserSelectorVisible(false);
-  };
 
   return (
-    <div style={{ height: "100%", backgroundColor: "#f5f5f5" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", paddingBottom: "50px" }}>
       {/* 顶部导航栏 */}
       <NavBar
         style={{
@@ -418,13 +335,27 @@ export default function Message() {
         right={
           <div
             onClick={handleRefresh}
-            style={{ cursor: "pointer", color: "#1890ff" }}
+            style={{
+              cursor: "pointer",
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: "#fff",
+              border: "1px solid #ddd",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#000",
+              marginLeft: "60px"
+            }}
+            aria-label="刷新"
+            role="button"
           >
-            刷新
+            <RedoOutline style={{ fontSize: 18 }} />
           </div>
         }
       >
-        消息
+        消息{isWebSocketConnected ? '' : ''}
       </NavBar>
 
       {/* 搜索框 */}
@@ -440,30 +371,72 @@ export default function Message() {
         />
       </div>
 
-      {/* 开始新聊天按钮 */}
-      <div
-        style={{
-          padding: "0 16px 12px",
-          backgroundColor: "#fff",
-          borderBottom: "1px solid #f0f0f0",
-        }}
-      >
-        <Button
-          block
-          color="primary"
-          size="large"
-          style={{
-            borderRadius: "8px",
-          }}
-          onClick={handleStartNewChat}
-        >
-          <MessageOutline style={{ marginRight: "8px" }} />
-          开始新聊天
-        </Button>
+
+
+      {/* 新朋友消息（通知项） */}
+      <div style={{ background: "#fff" }}>
+        <List style={{ "--border-top": "none", "--border-bottom": "none" }}>
+          <List.Item
+            onClick={handleGoNewFriends}
+            style={{ padding: "12px 16px", borderBottom: "1px solid #f0f0f0" }}
+            prefix={
+              <div style={{ position: "relative" }}>
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    border: `2px solid #ddd`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#f5f5f5",
+                  }}
+                >
+                  <img
+                    src="/imgs/添加.png"
+                    alt="新的朋友"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={(e) => {
+                      const t = e.target as HTMLImageElement;
+                      t.style.display = "none";
+                      const p = t.parentElement;
+                      if (p) {
+                        p.innerHTML = '<span style="font-size:36px;color:#52c41a">＋</span>';
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            }
+            title={
+              <div
+                style={{
+                  width: "280px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ fontSize: "16px", fontWeight: 600, color: "#333" }}>新的朋友</span>
+                <span style={{ fontSize: "12px", color: "#999" }}>
+                  {friendPreview ? formatTime(friendPreview.createdAt) : ""}
+                </span>
+              </div>
+            }
+            description={
+              <span style={{ fontSize: "14px", color: "#333" }}>
+                {friendPreview ? `${friendPreview.fromName} 添加您为好友` : "暂无好友申请"}
+              </span>
+            }
+            arrow={false}
+          />
+        </List>
       </div>
 
       {/* 聊天列表 */}
-      <div style={{ flex: 1, overflow: "auto" }}>
+      <div style={{ flex: 1, overflow: "auto", paddingBottom: 12 }}>
         {loading ? (
           <div
             style={{
@@ -615,12 +588,7 @@ export default function Message() {
         )}
       </div>
 
-      {/* 用户选择弹窗 */}
-      <UserSelector
-        visible={userSelectorVisible}
-        onClose={handleCloseUserSelector}
-        onSelectUser={handleUserSelect}
-      />
+
     </div>
   );
 }

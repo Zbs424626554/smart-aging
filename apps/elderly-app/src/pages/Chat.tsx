@@ -22,6 +22,7 @@ import {
   PictureOutlined,
   CameraOutlined,
   EnvironmentOutlined,
+  LeftOutlined,
 } from "@ant-design/icons";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -670,7 +671,7 @@ export default function Chat() {
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           localVideoRef.current.muted = true;
-          localVideoRef.current.play().catch(() => { });
+          localVideoRef.current.play().catch(() => {});
         }
       } else {
         await getAudioStream();
@@ -1020,7 +1021,7 @@ export default function Chat() {
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
             localVideoRef.current.muted = true;
-            localVideoRef.current.play().catch(() => { });
+            localVideoRef.current.play().catch(() => {});
           }
         } else {
           await getAudioStream();
@@ -1109,7 +1110,7 @@ export default function Chat() {
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
             localVideoRef.current.muted = true;
-            localVideoRef.current.play().catch(() => { });
+            localVideoRef.current.play().catch(() => {});
           }
         } else {
           await getAudioStream();
@@ -1422,7 +1423,7 @@ export default function Chat() {
     try {
       if (recorderRef.current) {
         // 停止但不发送
-        recorderRef.current.stop().catch(() => { });
+        recorderRef.current.stop().catch(() => {});
       }
     } finally {
       setIsRecording(false);
@@ -1543,7 +1544,7 @@ export default function Chat() {
       setTimeout(() => {
         if (cameraVideoRef.current) {
           cameraVideoRef.current.srcObject = stream;
-          cameraVideoRef.current.play().catch(() => { });
+          cameraVideoRef.current.play().catch(() => {});
         }
       }, 0);
     } catch (e) {
@@ -1883,7 +1884,7 @@ export default function Chat() {
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
         localVideoRef.current.muted = true;
-        localVideoRef.current.play().catch(() => { });
+        localVideoRef.current.play().catch(() => {});
       }
     } catch (e) {
       message.error("未获得摄像头或麦克风权限，无法发起视频通话");
@@ -2275,36 +2276,60 @@ export default function Chat() {
           flexShrink: 0,
           boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
+          gap: 8,
         }}
       >
-        <Space>
-          <Avatar
-            src={
-              conversation.users
-                .filter((user) => user.username !== currentUser?.username)
-                .map((user) => getUserAvatar(user.username))[0] || undefined
-            }
-            icon={<UserOutlined />}
+        {/* 返回按钮（左侧） */}
+        <div style={{ width: 40, display: "flex", alignItems: "center" }}>
+          <Button
+            type="text"
+            icon={<LeftOutlined />}
+            onClick={() => navigate(-1)}
+            style={{
+              width: 36,
+              fontSize: 24,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            title="返回"
           />
-          <div>
-            <Text strong>
-              {conversation.users
-                .filter((user) => user.username !== currentUser?.username)
-                .map((user) => user.realname || user.username)
-                .join(", ")}
-            </Text>
-            <Text type="secondary" style={{ marginLeft: 8, fontSize: "12px" }}>
-              {conversation.users
-                .filter((user) => user.username !== currentUser?.username)
-                .map((user) => getRoleLabel(user.username))
-                .join(", ")}
-            </Text>
-          </div>
-        </Space>
+        </div>
 
-        {/* 通话功能按钮 */}
+        {/* 身份信息（中间居中） */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+          <Space>
+            <Avatar
+              src={
+                conversation.users
+                  .filter((user) => user.username !== currentUser?.username)
+                  .map((user) => getUserAvatar(user.username))[0] || undefined
+              }
+              icon={<UserOutlined />}
+            />
+            <div style={{ textAlign: "center" }}>
+              <Text strong>
+                {conversation.users
+                  .filter((user) => user.username !== currentUser?.username)
+                  .map((user) => user.realname || user.username)
+                  .join(", ")}
+              </Text>
+              <Text
+                type="secondary"
+                style={{ marginLeft: 8, fontSize: "12px" }}
+              >
+                {conversation.users
+                  .filter((user) => user.username !== currentUser?.username)
+                  .map((user) => getRoleLabel(user.username))
+                  .join(", ")}
+              </Text>
+            </div>
+          </Space>
+        </div>
+
+        {/* 通话功能按钮（右侧） */}
         <Space>
           <Button
             type="text"
@@ -2487,10 +2512,10 @@ export default function Chat() {
                           {item.content}
                           {typeof (item as any).time === "number"
                             ? `（${Math.floor((item as any).time / 60)}:${(
-                              (item as any).time % 60
-                            )
-                              .toString()
-                              .padStart(2, "0")}）`
+                                (item as any).time % 60
+                              )
+                                .toString()
+                                .padStart(2, "0")}）`
                             : ""}
                         </span>
                       ) : item.type === "location" ? (

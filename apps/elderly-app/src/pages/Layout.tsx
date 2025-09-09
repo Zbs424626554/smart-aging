@@ -14,7 +14,7 @@ const Layout: React.FC = () => {
 
   const tabs = [
     { key: "/home/call", title: "呼叫", icon: <AppOutline /> },
-    { key: "/home/orders", title: "订单", icon: <UnorderedListOutline /> },
+    { key: "/home/community", title: "社区", icon: <UnorderedListOutline /> },
     { key: "/home/message", title: "消息", icon: <MessageOutline /> },
     { key: "/home/mine", title: "我的", icon: <UserOutline /> },
   ];
@@ -38,40 +38,74 @@ const Layout: React.FC = () => {
         }}
       >
         <TabBar
-          style={{ height: "1.36rem", background: "#000" }}
+          style={{ height: "1.36rem", background: "#fff" }}
           safeArea
           activeKey={currentKey}
           onChange={(key) => navigate(key)}
         >
-          {tabs.map((item) => (
-            <TabBar.Item
-              key={item.key}
-              icon={
-                <div
-                  style={{
-                    fontSize: "0.52rem",
-                    color: currentKey === item.key ? "#ff4d4f" : "#fff",
-                  }}
-                >
-                  {item.icon}
-                </div>
-              }
-              title={
-                <span
-                  style={{
-                    fontSize: "0.38rem",
-                    fontWeight: 700,
-                    color: currentKey === item.key ? "#ff4d4f" : "#fff",
-                    marginTop: "0.08rem",
-                    display: "inline-block",
-                  }}
-                >
-                  {item.title}
-                </span>
-              }
-            />
-          ))}
+          {tabs.map((item, index) => {
+            const marginStyle =
+              index === 1
+                ? { marginRight: "0.70rem" }
+                : index === 2
+                  ? { marginLeft: "0.70rem" }
+                  : {};
+            return (
+              <TabBar.Item
+                key={item.key}
+                icon={
+                  <div
+                    style={{
+                      fontSize: "0.52rem",
+                      color: currentKey === item.key ? "#ff4d4f" : "#777",
+                      ...marginStyle,
+                    }}
+                  >
+                    {item.icon}
+                  </div>
+                }
+                title={
+                  <span
+                    style={{
+                      fontSize: "0.38rem",
+                      fontWeight: 700,
+                      color: currentKey === item.key ? "#ff4d4f" : "#777",
+                      marginTop: "0.08rem",
+                      display: "inline-block",
+                      ...marginStyle,
+                    }}
+                  >
+                    {item.title}
+                  </span>
+                }
+              />
+            );
+          })}
         </TabBar>
+      </div>
+      {/* Center floating plus button */}
+      <div
+        onClick={() => navigate("/publish")}
+        style={{
+          position: "fixed",
+          left: "50%",
+          transform: "translateX(-50%)",
+          bottom: "0.5rem",
+          width: "1.2rem",
+          height: "1.2rem",
+          background: "#FF4D4F",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#fff",
+          fontSize: "0.72rem",
+          fontWeight: 700,
+          zIndex: 1000,
+          cursor: "pointer",
+        }}
+      >
+        +
       </div>
     </div>
   );

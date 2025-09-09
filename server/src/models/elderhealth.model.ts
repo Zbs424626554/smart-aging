@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IElderHealthArchive extends Document {
   elderID: mongoose.Types.ObjectId;
   name?: string;
+  gender?: string;
   age?: number;
   phone?: string;
   address?: string;
@@ -13,13 +14,16 @@ export interface IElderHealthArchive extends Document {
   };
   medicals?: string[];
   allergies?: string[];
-  useMedication?: Array<{ name: string; time: string }>;
-  // 生命体征（可选）
-  bloodPressure?: string; // e.g. "120/80"
-  bloodSugar?: number;    // mmol/L
-  heartRate?: number;     // bpm
-  oxygenLevel?: number;   // %
-  temperature?: number;   // ℃
+  // 兼容旧结构：time，新增结构：times[]
+  useMedication?: Array<{ name: string; time?: string; times?: string[] }>;
+  // 新增：体格信息
+  heightCm?: number;
+  weightKg?: number;
+  heartRate?: number;
+  bloodPressure?: string;
+  temperature?: number;
+  oxygenLevel?: number;
+  bloodSugar?: number;
 }
 
 const elderHealthArchiveSchema = new Schema(
@@ -31,6 +35,10 @@ const elderHealthArchiveSchema = new Schema(
     },
     name: {
       type: String,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "secret"],
     },
     age: {
       type: Number,
@@ -63,19 +71,51 @@ const elderHealthArchiveSchema = new Schema(
       type: [
         {
           name: { type: String, required: true },
-          time: { type: String, required: true },
+          // 旧字段，仅兼容
+          time: { type: String, required: false },
+          // 新字段：单个药品的多个时间
+          times: { type: [String], required: false },
           _id: false,
         },
       ],
       required: false,
       default: [],
     },
-    // 生命体征字段（允许为空）
-    bloodPressure: { type: String, required: false },
-    bloodSugar: { type: Number, required: false, min: 0, max: 50 },
-    heartRate: { type: Number, required: false, min: 0, max: 300 },
-    oxygenLevel: { type: Number, required: false, min: 0, max: 100 },
-    temperature: { type: Number, required: false, min: 30, max: 45 },
+    // 新增：身高（cm）与体重（kg）
+    heightCm: {
+      type: Number,
+      min: 0,
+      max: 300,
+    },
+    weightKg: {
+      type: Number,
+      min: 0,
+      max: 500,
+    },
+    heartRate: {
+      type: Number,
+      min: 0,
+      max: 300,
+    },
+    bloodPressure: {
+      type: String,
+      match: /^\d+\/\d+$/,
+    },
+    temperature: {
+      type: Number,
+      min: 30,
+      max: 45,
+    },
+    oxygenLevel: {
+      type: Number,
+      min: 0,
+      max: 100,
+    },
+    bloodSugar: {
+      type: Number,
+      min: 0,
+      max: 50,
+    },
   },
   {
     timestamps: true,

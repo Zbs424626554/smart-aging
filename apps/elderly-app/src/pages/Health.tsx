@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Typography, Spin, Empty } from "antd";
-import { List, Dialog, Button, Input, Space, Toast } from "antd-mobile";
+import { Spin, Empty } from "antd";
+import { List, Dialog, Button, Input, Space, Toast, Popover } from "antd-mobile";
+import { DeleteOutline } from "antd-mobile-icons";
 import {
   ElderHealthService,
   type ElderHealthArchiveDto,
 } from "../services/elderhealth.service";
-
-const { Title } = Typography;
+import { UserService, type User } from "../services/user.service";
+import NavBal from "../components/NavBal";
 
 const Health: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -34,10 +35,149 @@ const Health: React.FC = () => {
 
   const content = useMemo(() => {
     return (
-      <List>
-        <List.Item extra={safe(archive?.name)}>姓名</List.Item>
+      <List style={{ fontSize: 18, lineHeight: 1.7 }}>
         <List.Item
-          extra={safe(archive?.age as unknown as string)}
+          style={{ fontSize: 18 }}
+          extra={<span style={{ fontSize: 18 }}>{safe(archive?.name)}</span>}
+          arrow={false}
+          onClick={() => {
+            let nameInput = archive?.name || "";
+            let handler: any;
+            handler = Dialog.show({
+              title: "设置姓名",
+              content: (
+                <div style={{ paddingTop: 12 }}>
+                  <Input
+                    style={{ fontSize: 18, height: 44 }}
+                    placeholder="请输入姓名"
+                    defaultValue={nameInput}
+                    onChange={(v) => (nameInput = v)}
+                  />
+                </div>
+              ),
+              closeOnMaskClick: false,
+              actions: [
+                {
+                  key: "cancel",
+                  text: "取消",
+                  onClick: () => {
+                    Toast.show({ content: "已取消" });
+                    handler.close();
+                  },
+                },
+                {
+                  key: "ok",
+                  text: "保存",
+                  bold: true,
+                  onClick: async () => {
+                    const nm = (nameInput || "").trim();
+                    if (!nm) {
+                      Toast.show({ content: "请输入姓名" });
+                      return;
+                    }
+                    try {
+                      const updated = await ElderHealthService.updateName(nm);
+                      setArchive(updated || null);
+                      Toast.show({ content: "已保存" });
+                      handler.close();
+                    } catch (err: any) {
+                      Toast.show({ content: err?.message || "保存失败" });
+                    }
+                  },
+                },
+              ],
+            });
+          }}
+        >
+          姓名
+        </List.Item>
+        <List.Item
+          style={{ fontSize: 18 }}
+          extra={
+            <span style={{ fontSize: 18 }}>
+              {(() => {
+                const g = (archive as any)?.gender as string | undefined;
+                if (!g) return "保密";
+                if (g === "male") return "男";
+                if (g === "female") return "女";
+                return "保密";
+              })()}
+            </span>
+          }
+          arrow={false}
+          onClick={() => {
+            let selected = (archive as any)?.gender || "secret";
+            let latest = selected;
+            const GenderForm: React.FC = () => {
+              const [sel, setSel] = useState<string>(latest);
+              useEffect(() => {
+                latest = sel;
+              }, [sel]);
+              const opts = [
+                { key: "male", label: "男" },
+                { key: "female", label: "女" },
+                { key: "secret", label: "保密" },
+              ];
+              return (
+                <div style={{ paddingTop: 12 }}>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    {opts.map((opt) => (
+                      <Button
+                        key={opt.key}
+                        color="primary"
+                        fill={sel === opt.key ? "solid" : "outline"}
+                        onClick={() => setSel(opt.key)}
+                        style={{ height: 38 }}
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              );
+            };
+            let handler: any;
+            handler = Dialog.show({
+              title: "设置性别",
+              content: <GenderForm />,
+              closeOnMaskClick: false,
+              actions: [
+                {
+                  key: "cancel",
+                  text: "取消",
+                  onClick: () => {
+                    Toast.show({ content: "已取消" });
+                    handler.close();
+                  },
+                },
+                {
+                  key: "ok",
+                  text: "保存",
+                  bold: true,
+                  onClick: async () => {
+                    try {
+                      const updated = await ElderHealthService.updateGender(latest);
+                      setArchive(updated || null);
+                      Toast.show({ content: "已保存" });
+                      handler.close();
+                    } catch (err: any) {
+                      Toast.show({ content: err?.message || "保存失败" });
+                    }
+                  },
+                },
+              ],
+            });
+          }}
+        >
+          性别
+        </List.Item>
+        <List.Item
+          style={{ fontSize: 18 }}
+          extra={
+            <span style={{ fontSize: 18 }}>
+              {safe(archive?.age as unknown as string)}
+            </span>
+          }
           arrow={false}
           onClick={() => {
             let ageInput = archive?.age?.toString() || "";
@@ -47,6 +187,7 @@ const Health: React.FC = () => {
               content: (
                 <div style={{ paddingTop: 12 }}>
                   <Input
+                    style={{ fontSize: 18, height: 44 }}
                     type="number"
                     placeholder="请输入年龄"
                     defaultValue={ageInput}
@@ -90,10 +231,124 @@ const Health: React.FC = () => {
         >
           年龄
         </List.Item>
-        <List.Item extra={maskPhone(archive?.phone)}>电话</List.Item>
+        <List.Item
+          style={{ fontSize: 18 }}
+          extra={
+            <span style={{ fontSize: 18 }}>
+              {archive?.heightCm ? `${archive.heightCm} cm` : "未设置"}
+            </span>
+          }
+          arrow={false}
+          onClick={() => {
+            let heightInput = archive?.heightCm?.toString() || "";
+            let handler: any;
+            handler = Dialog.show({
+              title: "设置身高",
+              content: (
+                <div style={{ paddingTop: 12 }}>
+                  <Input
+                    style={{ fontSize: 18, height: 44 }}
+                    type="number"
+                    placeholder="请输入身高(cm)"
+                    defaultValue={heightInput}
+                    onChange={(v) => (heightInput = v)}
+                  />
+                </div>
+              ),
+              closeOnMaskClick: false,
+              actions: [
+                { key: "cancel", text: "取消", onClick: () => handler.close() },
+                {
+                  key: "ok",
+                  text: "保存",
+                  bold: true,
+                  onClick: async () => {
+                    const val = Number(heightInput);
+                    if (!Number.isFinite(val) || val <= 0 || val > 300) {
+                      Toast.show({ content: "请输入有效身高(0-300cm)" });
+                      return;
+                    }
+                    try {
+                      const updated = await ElderHealthService.updateHeight(val);
+                      setArchive(updated || null);
+                      Toast.show({ content: "已保存" });
+                      handler.close();
+                    } catch (err: any) {
+                      Toast.show({ content: err?.message || "保存失败" });
+                    }
+                  },
+                },
+              ],
+            });
+          }}
+        >
+          身高
+        </List.Item>
+        <List.Item
+          style={{ fontSize: 18 }}
+          extra={
+            <span style={{ fontSize: 18 }}>
+              {archive?.weightKg ? `${archive.weightKg} kg` : "未设置"}
+            </span>
+          }
+          arrow={false}
+          onClick={() => {
+            let weightInput = archive?.weightKg?.toString() || "";
+            let handler: any;
+            handler = Dialog.show({
+              title: "设置体重",
+              content: (
+                <div style={{ paddingTop: 12 }}>
+                  <Input
+                    style={{ fontSize: 18, height: 44 }}
+                    type="number"
+                    placeholder="请输入体重(kg)"
+                    defaultValue={weightInput}
+                    onChange={(v) => (weightInput = v)}
+                  />
+                </div>
+              ),
+              closeOnMaskClick: false,
+              actions: [
+                { key: "cancel", text: "取消", onClick: () => handler.close() },
+                {
+                  key: "ok",
+                  text: "保存",
+                  bold: true,
+                  onClick: async () => {
+                    const val = Number(weightInput);
+                    if (!Number.isFinite(val) || val <= 0 || val > 500) {
+                      Toast.show({ content: "请输入有效体重(0-500kg)" });
+                      return;
+                    }
+                    try {
+                      const updated = await ElderHealthService.updateWeight(val);
+                      setArchive(updated || null);
+                      Toast.show({ content: "已保存" });
+                      handler.close();
+                    } catch (err: any) {
+                      Toast.show({ content: err?.message || "保存失败" });
+                    }
+                  },
+                },
+              ],
+            });
+          }}
+        >
+          体重
+        </List.Item>
+        <List.Item
+          style={{ fontSize: 18 }}
+          extra={
+            <span style={{ fontSize: 18 }}>{maskPhone(archive?.phone)}</span>
+          }
+        >
+          电话
+        </List.Item>
         <List.Item
           arrow={false}
-          extra={safe(archive?.address)}
+          style={{ fontSize: 18 }}
+          extra={<span style={{ fontSize: 18 }}>{safe(archive?.address)}</span>}
           onClick={() => {
             let addressInput = archive?.address || "";
             let handler: any;
@@ -102,6 +357,7 @@ const Health: React.FC = () => {
               content: (
                 <div style={{ paddingTop: 12 }}>
                   <Input
+                    style={{ fontSize: 18, height: 44 }}
                     placeholder="请输入地址"
                     defaultValue={addressInput}
                     onChange={(v) => (addressInput = v)}
@@ -146,81 +402,128 @@ const Health: React.FC = () => {
           地址
         </List.Item>
         <List.Item
-          extra={safe(
-            archive?.emcontact?.realname || archive?.emcontact?.username
-          )}
+          style={{ fontSize: 18 }}
+          extra={
+            <span style={{ fontSize: 18 }}>
+              {safe(
+                archive?.emcontact?.realname || archive?.emcontact?.username
+              )}
+            </span>
+          }
           arrow={false}
           onClick={() => {
-            let username = archive?.emcontact?.username || "";
-            let realname = archive?.emcontact?.realname || "";
-            let phone = archive?.emcontact?.phone || "";
-            const isValidPhone = (p: string) =>
-              /^1[3-9]\d{9}$/.test(p.replace(/\D/g, ""));
-
             let handler: any;
-            handler = Dialog.show({
-              title: "紧急联系人",
-              content: (
+
+            const FamilyPicker: React.FC = () => {
+              const [keyword, setKeyword] = useState<string>("");
+              const [loadingList, setLoadingList] = useState<boolean>(false);
+              const [results, setResults] = useState<User[]>([]);
+
+              // 初次渲染不主动拉取，避免严格模式下二次调用；数据通过下方搜索 effect 触发
+
+              // 移除初次立即拉取，避免在 React StrictMode 下重复请求
+
+              useEffect(() => {
+                const timer = setTimeout(async () => {
+                  const kw = keyword.trim();
+                  if (!kw) {
+                    // 关键字为空：不请求，清空结果
+                    setResults([]);
+                    return;
+                  }
+                  setLoadingList(true);
+                  try {
+                    const resp = await UserService.searchUsers(kw, {
+                      role: "family",
+                      limit: 100,
+                    });
+                    setResults(resp?.list || []);
+                  } catch (err: any) {
+                    Toast.show({ content: err?.message || "搜索失败" });
+                  } finally {
+                    setLoadingList(false);
+                  }
+                }, 1500);
+                return () => clearTimeout(timer);
+              }, [keyword]);
+
+              const handlePick = async (u: User) => {
+                try {
+                  const updated = await ElderHealthService.saveEmergencyContact({
+                    // 仅使用 username 进行匹配，避免 realname 为空或 phone 格式差异导致匹配失败
+                    username: u.username,
+                  });
+                  setArchive(updated || null);
+                  Toast.show({ content: "已设置为紧急联系人" });
+                  if (handler) handler.close();
+                } catch (err: any) {
+                  Toast.show({ content: err?.message || "保存失败" });
+                }
+              };
+
+              return (
                 <div style={{ paddingTop: 12 }}>
                   <Space direction="vertical" style={{ width: "100%" }}>
                     <Input
-                      placeholder="用户名"
-                      defaultValue={username}
-                      onChange={(v) => (username = v)}
+                      style={{ fontSize: 18, height: 44 }}
+                      placeholder="按用户名或手机号搜索"
+                      value={keyword}
+                      onChange={setKeyword}
                     />
-                    <Input
-                      placeholder="真实姓名"
-                      defaultValue={realname}
-                      onChange={(v) => (realname = v)}
-                    />
-                    <Input
-                      type="tel"
-                      placeholder="手机号"
-                      defaultValue={phone}
-                      onChange={(v) => (phone = v)}
-                    />
+                    <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
+                      {loadingList ? (
+                        <div style={{ display: "flex", justifyContent: "center", padding: 12 }}>
+                          <Spin />
+                        </div>
+                      ) : results.length === 0 ? (
+                        <div style={{ padding: 12 }}>
+                          <Empty description="暂无数据" />
+                        </div>
+                      ) : (
+                        results.map((u) => (
+                          <div
+                            key={u.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              padding: "10px 4px",
+                              borderBottom: "1px solid #f0f0f0",
+                            }}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                              <div style={{ fontSize: 18, fontWeight: 600 }}>
+                                {u.realname || u.username}
+                              </div>
+                              <div style={{ fontSize: 14, color: "#666" }}>
+                                {u.username} · {u.phone || "无手机号"}
+                              </div>
+                            </div>
+                            <Button
+                              size="small"
+                              color="primary"
+                              onClick={() => handlePick(u)}
+                              style={{ height: 34, padding: "0 12px", fontSize: 14, borderRadius: 16 }}
+                            >
+                              选择
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </Space>
                 </div>
-              ),
-              closeOnMaskClick: false,
+              );
+            };
+
+            handler = Dialog.show({
+              title: "选择紧急联系人",
+              content: <FamilyPicker />,
+              closeOnMaskClick: true,
               actions: [
-                {
-                  key: "cancel",
-                  text: "取消",
-                  onClick: () => {
-                    Toast.show({ content: "已取消" });
-                    handler.close();
-                  },
-                },
-                {
-                  key: "ok",
-                  text: "保存",
-                  bold: true,
-                  onClick: () => {
-                    const cleanPhone = phone.replace(/\D/g, "");
-                    if (phone && !isValidPhone(phone)) {
-                      Toast.show({ content: "手机号格式不正确" });
-                      return;
-                    }
-                    // 调用后端保存
-                    ElderHealthService.saveEmergencyContact({
-                      username: username?.trim(),
-                      realname: realname?.trim(),
-                      phone: cleanPhone,
-                    })
-                      .then((archiveData) => {
-                        setArchive(archiveData || null);
-                        Toast.show({ content: "已保存" });
-                        handler.close();
-                      })
-                      .catch((err) => {
-                        Toast.show({
-                          content: (err?.message as string) || "保存失败",
-                        });
-                      });
-                  },
-                },
+                { key: "close", text: "关闭", onClick: () => handler.close() },
               ],
+              style: { "--min-width": "86vw", "--max-width": "92vw" } as any,
             });
           }}
         >
@@ -241,8 +544,15 @@ const Health: React.FC = () => {
                       alignItems: "center",
                     }}
                   >
-                    <span>疾病史</span>
-                    <Button size="mini" color="primary" onClick={openAdd}>
+                    <span style={{ fontSize: 20, fontWeight: 700 }}>
+                      疾病史
+                    </span>
+                    <Button
+                      size="small"
+                      color="primary"
+                      onClick={openAdd}
+                      style={{ height: 36, fontSize: 16, padding: "0 14px" }}
+                    >
                       添加
                     </Button>
                   </div>
@@ -258,7 +568,10 @@ const Health: React.FC = () => {
                         </div>
                       ) : (
                         items.map((m, idx) => (
-                          <div key={idx} style={{ padding: "6px 0" }}>
+                          <div
+                            key={idx}
+                            style={{ padding: "8px 0", fontSize: 18 }}
+                          >
                             {m}
                           </div>
                         ))
@@ -278,6 +591,7 @@ const Health: React.FC = () => {
                 content: (
                   <div style={{ paddingTop: 12 }}>
                     <Input
+                      style={{ fontSize: 18, height: 44 }}
                       placeholder="请输入疾病名称"
                       onChange={(v) => (inputValue = v)}
                     />
@@ -345,8 +659,15 @@ const Health: React.FC = () => {
                       alignItems: "center",
                     }}
                   >
-                    <span>过敏史</span>
-                    <Button size="mini" color="primary" onClick={openAdd}>
+                    <span style={{ fontSize: 20, fontWeight: 700 }}>
+                      过敏史
+                    </span>
+                    <Button
+                      size="small"
+                      color="primary"
+                      onClick={openAdd}
+                      style={{ height: 36, fontSize: 16, padding: "0 14px" }}
+                    >
                       添加
                     </Button>
                   </div>
@@ -362,7 +683,10 @@ const Health: React.FC = () => {
                         </div>
                       ) : (
                         items.map((a, idx) => (
-                          <div key={idx} style={{ padding: "6px 0" }}>
+                          <div
+                            key={idx}
+                            style={{ padding: "8px 0", fontSize: 18 }}
+                          >
                             {a}
                           </div>
                         ))
@@ -382,6 +706,7 @@ const Health: React.FC = () => {
                 content: (
                   <div style={{ paddingTop: 12 }}>
                     <Input
+                      style={{ fontSize: 18, height: 44 }}
                       placeholder="请输入过敏源"
                       onChange={(v) => (inputValue = v)}
                     />
@@ -450,8 +775,15 @@ const Health: React.FC = () => {
                       alignItems: "center",
                     }}
                   >
-                    <span>用药时间设置</span>
-                    <Button size="mini" color="primary" onClick={openAdd}>
+                    <span style={{ fontSize: 20, fontWeight: 700 }}>
+                      用药时间设置
+                    </span>
+                    <Button
+                      size="small"
+                      color="primary"
+                      onClick={openAdd}
+                      style={{ height: 36, fontSize: 16, padding: "0 14px" }}
+                    >
                       添加
                     </Button>
                   </div>
@@ -459,59 +791,322 @@ const Health: React.FC = () => {
                 content: (
                   <div>
                     {(() => {
-                      // 在弹窗内容中动态获取最新的用药数据
-                      const meds = archive?.useMedication || [];
-                      return meds.length === 0 ? (
-                        <div style={{ padding: 12 }}>
-                          <Empty description="暂无用药设置" />
-                        </div>
-                      ) : (
-                        meds.map((u, idx) => (
-                          <div key={idx} style={{ padding: "6px 0" }}>
-                            {u.name} {u.time}
+                      // 归一化用药数据到 {name, times[]}
+                      const raw = (archive?.useMedication || []) as any[];
+                      const map = new Map<string, Set<string>>();
+                      for (const it of raw) {
+                        const nm = (it?.name || "").trim();
+                        if (!nm) continue;
+                        const set = map.get(nm) || new Set<string>();
+                        if (Array.isArray(it?.times))
+                          for (const t of it.times) if (t) set.add(String(t));
+                        if (it?.time) set.add(String(it.time));
+                        map.set(nm, set);
+                      }
+                      const meds = Array.from(map.entries()).map(([n, s]) => ({
+                        name: n,
+                        times: Array.from(s).sort(),
+                      }));
+                      if (meds.length === 0) {
+                        return (
+                          <div style={{ padding: 12 }}>
+                            <Empty description="暂无用药设置" />
                           </div>
-                        ))
-                      );
+                        );
+                      }
+
+                      const openEdit = (item: { name: string; times: string[] }) => {
+                        let latest = { name: item.name, times: [...item.times] };
+                        const Form: React.FC = () => {
+                          const [name, setName] = useState<string>(latest.name);
+                          const [times, setTimes] = useState<string[]>(latest.times.length ? latest.times : [""]);
+                          useEffect(() => {
+                            latest = { name, times };
+                          }, [name, times]);
+                          return (
+                            <div style={{ paddingTop: 12 }}>
+                              <Space direction="vertical" style={{ width: "100%" }}>
+                                <Input
+                                  style={{ fontSize: 18, height: 44 }}
+                                  placeholder="药品名称"
+                                  value={name}
+                                  onChange={setName}
+                                />
+                                <div>
+                                  {times.map((t, idx) => (
+                                    <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                                      <input
+                                        type="time"
+                                        value={t}
+                                        style={{ width: "100%", height: 44, fontSize: 18, boxSizing: "border-box", padding: "0 12px" }}
+                                        onChange={(e) => {
+                                          const arr = [...times];
+                                          arr[idx] = e.target.value;
+                                          setTimes(arr);
+                                        }}
+                                      />
+                                      <Button
+                                        size="small"
+                                        color="danger"
+                                        onClick={() => setTimes(times.filter((_, i) => i !== idx))}
+                                        style={{
+                                          width: 44,
+                                          height: 44,
+                                          borderRadius: 12,
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}
+                                        aria-label="删除时间"
+                                      >
+                                        <DeleteOutline style={{ fontSize: 22 }} />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                  <Button
+                                    size="large"
+                                    color="primary"
+                                    fill="solid"
+                                    onClick={() => setTimes([...times, ""])}
+                                    style={{ marginTop: 8, width: "100%", height: 48, fontSize: 18 }}
+                                  >
+                                    + 添加时间
+                                  </Button>
+                                </div>
+                              </Space>
+                            </div>
+                          );
+                        };
+
+                        let handler: any;
+                        handler = Dialog.show({
+                          title: "修改用药时间",
+                          content: <Form />,
+                          closeOnMaskClick: false,
+                          actions: [
+                            { key: "cancel", text: "取消", onClick: () => handler.close() },
+                            {
+                              key: "ok",
+                              text: "保存",
+                              bold: true,
+                              onClick: async () => {
+                                const cleaned = Array.from(new Set(latest.times.map((x) => String(x || "").trim()).filter(Boolean))).sort();
+                                if (!latest.name.trim() || cleaned.length === 0) {
+                                  Toast.show({ content: "请填写药品名称和至少一个时间" });
+                                  return;
+                                }
+                                try {
+                                  if (latest.name.trim() !== item.name) {
+                                    await ElderHealthService.deleteMedicationND(item.name);
+                                  }
+                                  const updated = await ElderHealthService.addMedication(latest.name.trim(), cleaned);
+                                  setArchive(updated || null);
+                                  Toast.show({ content: "已保存" });
+                                  handler.close();
+                                  if (listHandler) listHandler.close();
+                                } catch (err: any) {
+                                  Toast.show({ content: err?.message || "保存失败" });
+                                }
+                              },
+                            },
+                          ],
+                        });
+                      };
+
+                      const onDelete = (item: { name: string }) => {
+                        Dialog.confirm({
+                          content: `删除“${item.name}”的所有提醒？`,
+                          onConfirm: async () => {
+                            try {
+                              const updated = await ElderHealthService.deleteMedicationND(item.name);
+                              setArchive(updated || null);
+                              Toast.show({ content: "已删除" });
+                              if (listHandler) listHandler.close();
+                            } catch (err: any) {
+                              Toast.show({ content: err?.message || "删除失败" });
+                            }
+                          },
+                        });
+                      };
+
+                      const MedList: React.FC = () => {
+                        const [activeKey, setActiveKey] = useState<string | null>(null);
+                        const makeHandler = (key: string) => (v: boolean) => setActiveKey(v ? key : null);
+                        return (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 10,
+                            }}
+                          >
+                            {meds.map((u, idx) => {
+                              const nameKey = `name-${idx}`;
+                              const timeKey = `time-${idx}`;
+                              return (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 12,
+                                    padding: "8px 0",
+                                  }}
+                                >
+                                  <Popover
+                                    content={
+                                      <div style={{ padding: 6, maxWidth: 260, wordBreak: "break-all", fontSize: 20 }}>{u.name}</div>
+                                    }
+                                    trigger="click"
+                                    placement="top-start"
+                                    visible={activeKey === nameKey}
+                                    onVisibleChange={makeHandler(nameKey)}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: 22,
+                                        fontWeight: 600,
+                                        flex: 1,
+                                        cursor: "pointer",
+                                        userSelect: "none",
+                                      }}
+                                      title={u.name}
+                                    >
+                                      {u.name.length > 3 ? `${u.name.slice(0, 2)}···` : u.name}
+                                    </div>
+                                  </Popover>
+                                  <Popover
+                                    content={
+                                      <div style={{ padding: 6, maxWidth: 280, fontSize: 20 }}>
+                                        {(u.times || []).length === 0 ? (
+                                          <div>暂无时间</div>
+                                        ) : (
+                                          <div>{(u.times || []).join("、")}</div>
+                                        )}
+                                      </div>
+                                    }
+                                    trigger="click"
+                                    placement="top"
+                                    visible={activeKey === timeKey}
+                                    onVisibleChange={makeHandler(timeKey)}
+                                  >
+                                    <div
+                                      style={{
+                                        fontSize: 20,
+                                        color: "#333",
+                                        marginRight: 20,
+                                        cursor: "pointer",
+                                        userSelect: "none",
+                                      }}
+                                      title={(u.times || []).join("、")}
+                                    >
+                                      {(u.times || []).length <= 1
+                                        ? (u.times || ["--:--"])[0]
+                                        : `共${(u.times || []).length}次`}
+                                    </div>
+                                  </Popover>
+                                  <div style={{ display: "flex", gap: 8 }}>
+                                    <Button
+                                      size="small"
+                                      color="primary"
+                                      fill="outline"
+                                      onClick={() => openEdit(u)}
+                                      style={{ height: 36, padding: "0 14px", fontSize: 16, borderRadius: 18 }}
+                                    >
+                                      修改
+                                    </Button>
+                                    <Button
+                                      size="small"
+                                      color="danger"
+                                      onClick={() => onDelete(u)}
+                                      style={{ height: 36, padding: "0 14px", fontSize: 16, borderRadius: 18 }}
+                                    >
+                                      删除
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      };
+
+                      return <MedList />;
                     })()}
                   </div>
                 ),
                 closeOnMaskClick: true,
+                style: { "--min-width": "86vw", "--max-width": "92vw" } as any,
               });
             };
 
             const openAdd = () => {
-              let name = "";
-              let time = "";
-              let handler: any;
-              handler = Dialog.show({
-                title: "添加用药",
-                content: (
+              let latest = { name: "", times: [""] as string[] };
+              const Form: React.FC = () => {
+                const [name, setName] = useState<string>("");
+                const [times, setTimes] = useState<string[]>([""]);
+                useEffect(() => {
+                  latest = { name, times };
+                }, [name, times]);
+                return (
                   <div style={{ paddingTop: 12 }}>
                     <Space direction="vertical" style={{ width: "100%" }}>
                       <Input
+                        style={{ fontSize: 18, height: 44 }}
                         placeholder="药品名称"
-                        onChange={(v) => (name = v)}
+                        value={name}
+                        onChange={setName}
                       />
-                      <input
-                        type="time"
-                        style={{
-                          width: "100%",
-                          height: 36,
-                          boxSizing: "border-box",
-                        }}
-                        onChange={(e) => (time = e.target.value)}
-                      />
+                      <div>
+                        {times.map((t, idx) => (
+                          <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                            <input
+                              type="time"
+                              value={t}
+                              style={{ width: "100%", height: 44, fontSize: 18, boxSizing: "border-box", padding: "0 12px" }}
+                              onChange={(e) => {
+                                const arr = [...times];
+                                arr[idx] = e.target.value;
+                                setTimes(arr);
+                              }}
+                            />
+                            <Button
+                              size="small"
+                              color="danger"
+                              onClick={() => setTimes(times.filter((_, i) => i !== idx))}
+                              style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 12,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                              aria-label="删除时间"
+                            >
+                              <DeleteOutline style={{ fontSize: 22 }} />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button size="large" color="primary" fill="solid" onClick={() => setTimes([...times, ""])} style={{ marginTop: 8, width: "100%", height: 48, fontSize: 18 }}>
+                          + 添加时间
+                        </Button>
+                      </div>
                     </Space>
                   </div>
-                ),
+                );
+              };
+
+              let handler: any;
+              handler = Dialog.show({
+                title: "添加用药时间",
+                content: <Form />,
                 closeOnMaskClick: false,
                 actions: [
                   {
                     key: "cancel",
                     text: "取消",
                     onClick: () => {
-                      name = "";
-                      time = "";
                       Toast.show({ content: "已取消" });
                       handler.close();
                     },
@@ -521,22 +1116,19 @@ const Health: React.FC = () => {
                     text: "保存",
                     bold: true,
                     onClick: async () => {
-                      if (!name.trim() || !time.trim()) {
-                        Toast.show({ content: "请填写完整" });
+                      const cleaned = Array.from(new Set(latest.times.map((x) => String(x || "").trim()).filter(Boolean))).sort();
+                      if (!latest.name.trim() || cleaned.length === 0) {
+                        Toast.show({ content: "请填写药品名称和至少一个时间" });
                         return;
                       }
                       try {
-                        // 调用后端接口保存用药时间设置
                         const updated = await ElderHealthService.addMedication(
-                          name.trim(),
-                          time.trim()
+                          latest.name.trim(),
+                          cleaned
                         );
-                        // 更新本地状态
                         setArchive(updated || null);
                         Toast.show({ content: "已保存" });
                         handler.close();
-
-                        // 关闭当前列表对话框
                         if (listHandler) {
                           listHandler.close();
                         }
@@ -582,7 +1174,7 @@ const Health: React.FC = () => {
 
   return (
     <div style={{ padding: 12 }}>
-      <Title level={3}>健康档案</Title>
+      <NavBal title="健康档案" />
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
           <Spin />

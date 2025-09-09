@@ -78,6 +78,22 @@ const analyzeWithAI = async (input: EmergencyAnalysisInput): Promise<EmergencyAn
       return null;
     };
 
+    // 兼容大模型返回包含代码块或解释性文本的情况
+    const extractJson = (text: string): string | null => {
+      if (!text) return null;
+      const trimmed = String(text).trim();
+      // ```json\n{...}\n```
+      const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      if (fenced && fenced[1]) return fenced[1].trim();
+      // 普通文本中夹带 JSON：提取首尾大括号
+      const start = trimmed.indexOf('{');
+      const end = trimmed.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        return trimmed.slice(start, end + 1).trim();
+      }
+      return null;
+    };
+
     try {
       const analysis = safeParseJson(response);
       return {

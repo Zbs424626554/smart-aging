@@ -85,11 +85,11 @@ router.post("/elderhealth/medication", async (req: Request, res: Response) => {
       return res.json({ code: 401, message: "未登录", data: null });
     }
 
-    const { name, time } = req.body || {};
+    const { name, times, time } = req.body || {};
     const medicationName = (name || "").trim();
-    const medicationTime = (time || "").trim();
+    let incomingTimes: string[] = Array.isArray(times) ? times : (time ? [String(time)] : []);
 
-    if (!medicationName || !medicationTime) {
+    if (!medicationName || incomingTimes.length === 0) {
       return res.json({
         code: 400,
         message: "药品名称和时间不能为空",
@@ -97,9 +97,11 @@ router.post("/elderhealth/medication", async (req: Request, res: Response) => {
       });
     }
 
-    // 验证时间格式 (HH:MM)
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(medicationTime)) {
+    incomingTimes = incomingTimes
+      .map((t) => String(t || "").trim())
+      .filter(Boolean);
+    if (incomingTimes.some((t) => !timeRegex.test(t))) {
       return res.json({
         code: 400,
         message: "时间格式不正确，请使用HH:MM格式",
@@ -107,14 +109,34 @@ router.post("/elderhealth/medication", async (req: Request, res: Response) => {
       });
     }
 
-    // 使用原子更新，添加新的用药记录
+    // 读出现有数据并归一化
+    const archive = await ElderHealthArchive.findOne({ elderID: elderId });
+    const nameToTimes = new Map<string, Set<string>>();
+    if (archive?.useMedication) {
+      for (const item of archive.useMedication as any[]) {
+        const nm = (item?.name || "").trim();
+        if (!nm) continue;
+        const set = nameToTimes.get(nm) || new Set<string>();
+        if (Array.isArray(item?.times)) for (const t of item.times) if (t) set.add(String(t));
+        if (item?.time) set.add(String(item.time));
+        nameToTimes.set(nm, set);
+      }
+    }
+
+    // 覆盖该药品的时间集合
+    nameToTimes.set(medicationName, new Set(incomingTimes));
+
+    // 写回规范结构
+    const normalized: any[] = [];
+    for (const [nm, set] of nameToTimes.entries()) {
+      const arr = Array.from(set).sort();
+      normalized.push({ name: nm, times: arr });
+    }
+
     await ElderHealthArchive.updateOne(
       { elderID: elderId },
-      {
-        $push: {
-          useMedication: { name: medicationName, time: medicationTime },
-        },
-      }
+      { $setOnInsert: { elderID: elderId }, $set: { useMedication: normalized } },
+      { upsert: true }
     );
 
     const updated = await ElderHealthArchive.findOne({ elderID: elderId });
@@ -287,6 +309,85 @@ router.post("/elderhealth/address", async (req: Request, res: Response) => {
   }
 });
 
+// 更新姓名
+router.post("/elderhealth/name", async (req: Request, res: Response) => {
+  try {
+    const auth = req.headers.authorization;
+    let userId: string | null = null;
+    if (auth && auth.startsWith("Bearer ")) {
+      const token = auth.slice(7);
+      try {
+        const payload = verifyToken(token) as any;
+        userId = payload?.id || null;
+      } catch (err) {
+        // ignore
+      }
+    }
+    const elderIdFromQuery = (req.query.elderId as string) || null;
+    const elderId = userId || elderIdFromQuery;
+    if (!elderId) {
+      return res.json({ code: 401, message: "未登录", data: null });
+    }
+
+    const { name } = req.body || {};
+    const trimmed = (name || "").trim();
+    if (!trimmed) {
+      return res.json({ code: 400, message: "姓名不能为空", data: null });
+    }
+
+    const archive = await ElderHealthArchive.findOne({ elderID: elderId });
+    if (!archive) {
+      return res.json({ code: 404, message: "未找到健康档案", data: null });
+    }
+    archive.name = trimmed;
+    await archive.save();
+    return res.json({ code: 200, message: "保存成功", data: archive });
+  } catch (error) {
+    console.error("更新姓名失败:", error);
+    return res.status(500).json({ code: 500, message: "服务器错误", data: null });
+  }
+});
+
+// 更新性别
+router.post("/elderhealth/gender", async (req: Request, res: Response) => {
+  try {
+    const auth = req.headers.authorization;
+    let userId: string | null = null;
+    if (auth && auth.startsWith("Bearer ")) {
+      const token = auth.slice(7);
+      try {
+        const payload = verifyToken(token) as any;
+        userId = payload?.id || null;
+      } catch (err) {
+        // ignore
+      }
+    }
+    const elderIdFromQuery = (req.query.elderId as string) || null;
+    const elderId = userId || elderIdFromQuery;
+    if (!elderId) {
+      return res.json({ code: 401, message: "未登录", data: null });
+    }
+
+    const { gender } = req.body || {};
+    const allowed = ["male", "female", "secret"];
+    const normalized = String(gender || "").toLowerCase();
+    if (!allowed.includes(normalized)) {
+      return res.json({ code: 400, message: "性别参数不合法", data: null });
+    }
+
+    const archive = await ElderHealthArchive.findOne({ elderID: elderId });
+    if (!archive) {
+      return res.json({ code: 404, message: "未找到健康档案", data: null });
+    }
+    (archive as any).gender = normalized;
+    await archive.save();
+    return res.json({ code: 200, message: "保存成功", data: archive });
+  } catch (error) {
+    console.error("更新性别失败:", error);
+    return res.status(500).json({ code: 500, message: "服务器错误", data: null });
+  }
+});
+
 // 添加一条疾病史
 router.post("/elderhealth/medicals", async (req: Request, res: Response) => {
   try {
@@ -429,7 +530,7 @@ router.post("/elderhealth/age", async (req: Request, res: Response) => {
   }
 });
 
-// 更新生命体征（体温/血糖/血压/心率/血氧）
+// 更新健康状态（血压、血糖、血氧、体温、心率）
 router.post("/elderhealth/vitals", async (req: Request, res: Response) => {
   try {
     const auth = req.headers.authorization;
@@ -445,51 +546,57 @@ router.post("/elderhealth/vitals", async (req: Request, res: Response) => {
       }
     }
 
-    // 护士端没有老人token，因此允许通过查询参数 elderId 指定目标老人
     const elderIdFromQuery = (req.query.elderId as string) || null;
-    // 优先使用查询参数 elderId（护士端场景），若无则回退到 token
-    const elderId = elderIdFromQuery || userId;
+    const elderId = userId || elderIdFromQuery;
 
     if (!elderId) {
       return res.json({ code: 401, message: "未登录", data: null });
     }
 
-    const { temperature, bloodSugar, bloodPressure, heartRate, oxygenLevel } = req.body || {};
+    const {
+      bloodPressure,
+      bloodSugar,
+      oxygenLevel,
+      temperature,
+      heartRate,
+      name,
+    } = req.body || {};
 
-    // 构建更新对象（仅更新提供的字段）
-    const toSet: any = {};
-    if (typeof temperature !== "undefined") toSet.temperature = Number(temperature);
-    if (typeof bloodSugar !== "undefined") toSet.bloodSugar = Number(bloodSugar);
-    if (typeof heartRate !== "undefined") toSet.heartRate = Number(heartRate);
-    if (typeof oxygenLevel !== "undefined") toSet.oxygenLevel = Number(oxygenLevel);
-    if (typeof bloodPressure !== "undefined") {
-      const bpStr = String(bloodPressure).trim();
-      const ok = /^\d+\/\d+$/.test(bpStr);
-      if (!ok) {
-        return res.json({ code: 400, message: "血压格式应为 收缩压/舒张压（如120/80）", data: null });
-      }
-      toSet.bloodPressure = bpStr;
+    // 简单校验
+    const bpOk = typeof bloodPressure === "string" && /^\d{2,3}\/\d{2,3}$/.test(bloodPressure);
+    const bsOk = bloodSugar === undefined || (typeof bloodSugar === "number" && bloodSugar >= 0 && bloodSugar <= 50);
+    const oxOk = oxygenLevel === undefined || (typeof oxygenLevel === "number" && oxygenLevel >= 0 && oxygenLevel <= 100);
+    const tpOk = temperature === undefined || (typeof temperature === "number" && temperature >= 30 && temperature <= 45);
+    const hrOk = heartRate === undefined || (typeof heartRate === "number" && heartRate >= 0 && heartRate <= 300);
+
+    if (!bpOk || !bsOk || !oxOk || !tpOk || !hrOk) {
+      return res.json({ code: 400, message: "参数不合法", data: null });
     }
 
-    if (Object.keys(toSet).length === 0) {
-      return res.json({ code: 400, message: "没有需要更新的字段", data: null });
-    }
+    // 组装更新字段
+    const $set: any = {
+      bloodPressure,
+      bloodSugar,
+      oxygenLevel,
+      temperature,
+      heartRate,
+    };
+    if (name) $set.name = name;
 
+    // upsert 档案并更新 vitals
     await ElderHealthArchive.updateOne(
       { elderID: elderId },
-      { $set: toSet, $currentDate: { updatedAt: true } }
+      {
+        $setOnInsert: { elderID: elderId },
+        $set,
+      },
+      { upsert: true }
     );
 
     const updated = await ElderHealthArchive.findOne({ elderID: elderId });
-    if (!updated) {
-      return res.json({ code: 404, message: "未找到健康档案", data: null });
-    }
-
     return res.json({ code: 200, message: "保存成功", data: updated });
   } catch (error) {
-    console.error("更新生命体征失败:", error);
-    return res
-      .status(500)
-      .json({ code: 500, message: "服务器错误", data: null });
+    console.error("更新健康状态失败:", error);
+    return res.status(500).json({ code: 500, message: "服务器错误", data: null });
   }
 });
