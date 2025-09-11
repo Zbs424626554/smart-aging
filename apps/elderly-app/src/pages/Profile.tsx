@@ -670,7 +670,7 @@ const Profile: React.FC = () => {
 
       <List header="个人中心">
         <List.Item onClick={showBasicInfo}>基础资料</List.Item>
-        <List.Item onClick={() => navigate("/home/health")}>健康档案</List.Item>
+        <List.Item onClick={() => navigate("/health")}>健康档案</List.Item>
         <List.Item arrow={false} onClick={showAccountSecurity}>
           修改密码
         </List.Item>
@@ -700,3 +700,60 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+
+// 子组件：展示单个指标
+const HealthItem: React.FC<{ label: string; value: string }> = ({
+  label,
+  value,
+}) => {
+  return (
+    <div
+      style={{
+        background: "#fafafa",
+        borderRadius: 8,
+        padding: 12,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        minHeight: 64,
+        gap: 12,
+      }}
+    >
+      <span style={{ color: "#666", fontSize: 18 }}>{label}</span>
+      <span style={{ color: "#222", fontSize: 22, fontWeight: 700 }}>{value}</span>
+    </div>
+  );
+};
+
+// 子组件：用药时间条目
+const MedicationItem: React.FC<{
+  name: string;
+  times: string[];
+  dueSoon?: boolean;
+  displayTime?: string;
+}> = ({ name, times, dueSoon, displayTime }) => {
+  return (
+    <div
+      style={{
+        background: "#fafafa",
+        borderRadius: 8,
+        padding: 12,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: 96,
+      }}
+    >
+      <span style={{ color: "#666", fontSize: 18 }}>{name}</span>
+      <span style={{ color: "#222", fontSize: 28, fontWeight: 700 }}>
+        {displayTime || (times || []).join("、")}
+      </span>
+      {dueSoon ? (
+        <span style={{ color: "#d4380d", marginTop: 8, fontSize: 14 }}>
+          即将到点，请按时服药
+        </span>
+      ) : null}
+    </div>
+  );
+};

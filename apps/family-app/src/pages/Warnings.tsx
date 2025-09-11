@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from './Warnings.module.css';
 import { socket, registerUser } from '../socket';
 import { AuthService } from '../services/auth.service';
-import request from '../utils/request';
+import request, { http } from '../utils/request';
 import PageHeader from '../components/PageHeader';
 import { MessageService } from '../services/message.service';
 import { useNavigate } from 'react-router-dom';
@@ -40,9 +40,7 @@ const Warnings: React.FC = () => {
     if (uid) {
       registerUser(uid);
     }
-    // 初始化拉取历史
-    request.get('/emergency/family').then((resp: any) => {
-      const arr = Array.isArray(resp.data) ? resp.data : [];
+    const mapList = (arr: any[]) => {
       const mapped = arr.map((p: any) => {
         const risk = parseRiskLevel(p.aiAnalysis); // 'low'|'medium'|'high'|undefined
         const { t, pr } = riskToTypePriority(risk);
@@ -62,7 +60,22 @@ const Warnings: React.FC = () => {
         } as Warning;
       });
       setWarnings(mapped);
-    }).catch(() => void 0);
+    };
+
+    const fetchHistory = async () => {
+      try {
+        const q: string[] = ['debug=1'];
+        if (user?.username) q.push(`username=${encodeURIComponent((user as any).username)}`);
+        if (user?.realname) q.push(`realname=${encodeURIComponent((user as any).realname)}`);
+        if (user?.phone) q.push(`phone=${encodeURIComponent((user as any).phone)}`);
+        const url = `/emergency/family?${q.join('&')}`;
+        const resp: any = await http.get(url);
+        const arr = Array.isArray(resp?.data) ? resp.data : (Array.isArray(resp) ? resp : []);
+        mapList(Array.isArray(arr) ? arr : []);
+      } catch { }
+    };
+
+    void fetchHistory();
     const handler = (payload: any) => {
       // 仅处理紧急事件
       const now = new Date();

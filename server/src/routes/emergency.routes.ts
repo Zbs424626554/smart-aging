@@ -84,34 +84,42 @@ export default function emergencyRoutes(io: IOServer) {
       const { User } = await import('../models/user.model');
       const { ElderHealthArchive } = await import('../models/elderhealth.model');
 
-      // 当前家属信息
-      const me: any = await User.findById(userId).select('username realname phone').lean();
+      // 当前请求的"联系人"信息来源：优先 query 覆盖 → token 用户
+      const meFromToken: any = await User.findById(userId).select('username realname phone').lean();
+      const qp = (req.query as any) || {};
+      const me: any = {
+        username: typeof qp.username === 'string' && qp.username.trim() ? String(qp.username).trim() : meFromToken?.username || '',
+        realname: typeof qp.realname === 'string' && qp.realname.trim() ? String(qp.realname).trim() : meFromToken?.realname || '',
+        phone: typeof qp.phone === 'string' && qp.phone.trim() ? String(qp.phone).trim() : meFromToken?.phone || '',
+      };
 
       // A) 通过紧急联系人信息（档案）反查老人ID
+      const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const archiveOr: any[] = [];
-      if (me?.username) archiveOr.push({ 'emcontact.username': me.username });
-      if (me?.realname) archiveOr.push({ 'emcontact.realname': me.realname });
+      if (me?.username) archiveOr.push({ 'emcontact.username': { $regex: new RegExp(esc(me.username), 'i') } });
+      if (me?.realname) archiveOr.push({ 'emcontact.realname': { $regex: new RegExp(esc(me.realname), 'i') } });
       if (me?.phone) archiveOr.push({ 'emcontact.phone': me.phone });
       let elderIds: any[] = [];
       if (archiveOr.length) {
         const archives = await ElderHealthArchive.find({ $or: archiveOr }).select('elderID').lean();
         elderIds = archives.map((a: any) => a.elderID).filter(Boolean);
       }
-
+      // 可按需开启调试
       // B) 在事件上直接匹配联系人字段（名字用模糊、忽略大小写；电话用精确）
       const ors: any[] = [];
       if (elderIds.length) ors.push({ userId: { $in: elderIds } });
       const nameRegex: any[] = [];
-      if (me?.username) nameRegex.push({ contactName: { $regex: me.username, $options: 'i' } });
-      if (me?.realname) nameRegex.push({ contactName: { $regex: me.realname, $options: 'i' } });
+      if (me?.username) nameRegex.push({ contactName: { $regex: new RegExp(esc(me.username), 'i') } });
+      if (me?.realname) nameRegex.push({ contactName: { $regex: new RegExp(esc(me.realname), 'i') } });
       if (nameRegex.length) ors.push({ $or: nameRegex });
       if (me?.phone) ors.push({ contactPhone: me.phone });
       // 兼容历史把家属名字误写到 elderlyName 的情况
       const elderNameRegex: any[] = [];
-      if (me?.username) elderNameRegex.push({ elderlyName: { $regex: me.username, $options: 'i' } });
-      if (me?.realname) elderNameRegex.push({ elderlyName: { $regex: me.realname, $options: 'i' } });
+      if (me?.username) elderNameRegex.push({ elderlyName: { $regex: new RegExp(esc(me.username), 'i') } });
+      if (me?.realname) elderNameRegex.push({ elderlyName: { $regex: new RegExp(esc(me.realname), 'i') } });
       if (elderNameRegex.length) ors.push({ $or: elderNameRegex });
 
+      // 可按需开启调试
       if (!ors.length) return res.json({ code: 200, message: 'ok', data: [] });
 
       const list = await EmergencyAlert.find({ $or: ors })
@@ -119,6 +127,7 @@ export default function emergencyRoutes(io: IOServer) {
         .limit(200)
         .select('userId status triggerTime createdAt location aiAnalysis transcript elderlyName contactName contactPhone')
         .lean();
+      // 可按需开启调试
 
       // 兜底：elderlyName 以老人用户的昵称/实名为准
       const ids = Array.from(new Set(list.map((d: any) => String(d.userId))));

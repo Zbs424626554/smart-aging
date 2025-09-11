@@ -22,6 +22,7 @@ import {
   PictureOutlined,
   CameraOutlined,
   EnvironmentOutlined,
+  LeftOutlined,
 } from "@ant-design/icons";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -2290,10 +2291,38 @@ export default function Chat() {
           flexShrink: 0,
           boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
+          gap: 8,
         }}
       >
+        {/* 返回按钮（左侧） */}
+        <div style={{ width: 40, display: "flex", alignItems: "center" }}>
+          <Button
+            type="text"
+            icon={<LeftOutlined />}
+            onClick={() => {
+              try {
+                if (callSession.isActive) {
+                  void endCall();
+                }
+              } catch { }
+              try {
+                navigate(location.pathname, { replace: true });
+              } catch { }
+              try { navigate(-1); } catch { }
+            }}
+            style={{
+              width: 36,
+              fontSize: 24,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            title="返回"
+          />
+        </div>
+
         <Space>
           <Avatar
             src={

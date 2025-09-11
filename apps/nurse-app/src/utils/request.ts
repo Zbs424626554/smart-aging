@@ -38,7 +38,6 @@ const request: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
 });
 
 // 请求拦截器
@@ -101,7 +100,8 @@ request.interceptors.response.use(
     if (shouldShowSuccess && data?.message) {
       message.success(data.message);
     }
-    return data;
+    // 注意：保持返回 AxiosResponse，交由 http 包装器解包为 data，避免类型不匹配
+    return response as AxiosResponse<ApiResponse>;
   },
   (error) => {
     const cfg = (error?.config || {}) as RequestConfig;
@@ -145,23 +145,23 @@ request.interceptors.response.use(
 // 封装请求方法
 export const http = {
   get: <T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> => {
-    return request.get(url, config);
+    return request.get(url, config).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
   },
 
   post: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
-    return request.post(url, data, config);
+    return request.post(url, data, config).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
   },
 
   put: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
-    return request.put(url, data, config);
+    return request.put(url, data, config).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
   },
 
   patch: <T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> => {
-    return request.patch(url, data, config);
+    return request.patch(url, data, config).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
   },
 
   delete: <T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> => {
-    return request.delete(url, config);
+    return request.delete(url, config).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
   },
 };
 

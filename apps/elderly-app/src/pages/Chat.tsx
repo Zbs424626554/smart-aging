@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Input,
   Button,
@@ -304,6 +304,7 @@ const VoicePlayer: React.FC<{
 export default function Chat() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const shouldAutoCall = useMemo(() => {
     try {
       const sp = new URLSearchParams(location.search);
@@ -671,7 +672,7 @@ export default function Chat() {
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           localVideoRef.current.muted = true;
-          localVideoRef.current.play().catch(() => {});
+          localVideoRef.current.play().catch(() => { });
         }
       } else {
         await getAudioStream();
@@ -1021,7 +1022,7 @@ export default function Chat() {
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
             localVideoRef.current.muted = true;
-            localVideoRef.current.play().catch(() => {});
+            localVideoRef.current.play().catch(() => { });
           }
         } else {
           await getAudioStream();
@@ -1110,7 +1111,7 @@ export default function Chat() {
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
             localVideoRef.current.muted = true;
-            localVideoRef.current.play().catch(() => {});
+            localVideoRef.current.play().catch(() => { });
           }
         } else {
           await getAudioStream();
@@ -1423,7 +1424,7 @@ export default function Chat() {
     try {
       if (recorderRef.current) {
         // 停止但不发送
-        recorderRef.current.stop().catch(() => {});
+        recorderRef.current.stop().catch(() => { });
       }
     } finally {
       setIsRecording(false);
@@ -1544,7 +1545,7 @@ export default function Chat() {
       setTimeout(() => {
         if (cameraVideoRef.current) {
           cameraVideoRef.current.srcObject = stream;
-          cameraVideoRef.current.play().catch(() => {});
+          cameraVideoRef.current.play().catch(() => { });
         }
       }, 0);
     } catch (e) {
@@ -1884,7 +1885,7 @@ export default function Chat() {
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
         localVideoRef.current.muted = true;
-        localVideoRef.current.play().catch(() => {});
+        localVideoRef.current.play().catch(() => { });
       }
     } catch (e) {
       message.error("未获得摄像头或麦克风权限，无法发起视频通话");
@@ -2512,10 +2513,10 @@ export default function Chat() {
                           {item.content}
                           {typeof (item as any).time === "number"
                             ? `（${Math.floor((item as any).time / 60)}:${(
-                                (item as any).time % 60
-                              )
-                                .toString()
-                                .padStart(2, "0")}）`
+                              (item as any).time % 60
+                            )
+                              .toString()
+                              .padStart(2, "0")}）`
                             : ""}
                         </span>
                       ) : item.type === "location" ? (
