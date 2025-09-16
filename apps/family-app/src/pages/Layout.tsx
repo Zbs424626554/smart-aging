@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import styles from './Layout.module.css';
-import { socket, registerUser } from '../socket';
+import WebSocketService from '../services/websocket.service';
 import { AuthService } from '../services/auth.service';
 const Layout: React.FC = () => {
   const navigate = useNavigate();
@@ -41,9 +41,9 @@ const Layout: React.FC = () => {
   };
   useEffect(() => {
     const user = AuthService.getCurrentUser();
-    const uid = user?.id || (user as any)?._id;
-    if (uid) {
-      registerUser(uid);
+    const username = (user as any)?.username;
+    if (username) {
+      try { void WebSocketService.connect(username); } catch { }
     }
 
     const onEmergencyUpdated = (payload: any) => {
@@ -52,9 +52,9 @@ const Layout: React.FC = () => {
         navigate('/warnings');
       }
     };
-    socket.on('emergency:updated', onEmergencyUpdated);
+    try { WebSocketService.addEventListener('emergency:updated', onEmergencyUpdated); } catch { }
     return () => {
-      socket.off('emergency:updated', onEmergencyUpdated);
+      try { WebSocketService.removeEventListener('emergency:updated', onEmergencyUpdated); } catch { }
     };
   }, [location.pathname, navigate]);
 

@@ -29,40 +29,90 @@ const RootRedirect: React.FC = () => {
 
   useEffect(() => {
     const checkLogin = async () => {
-      // 1) 读取 URL 中的 ssoToken 并写入本地
+      const expectedRole = "family";
+
+      // 1) 读取 URL 中的 ssoToken，先解析角色再决定是否写入本地
       if (typeof window !== 'undefined') {
         const url = new URL(window.location.href);
         const ssoToken = url.searchParams.get('ssoToken');
         if (ssoToken) {
-          localStorage.setItem('token', ssoToken);
+          try {
+            const payloadBase64 = ssoToken.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+            const payload = payloadBase64 ? JSON.parse(atob(payloadBase64)) : null;
+            if (payload?.role === expectedRole) {
+              localStorage.setItem('token', ssoToken);
+              localStorage.setItem('userRole', payload.role);
+              setResolvedRole(payload.role);
+            } else {
+              // 角色与当前端不匹配：清理并要求重新登录
+              localStorage.removeItem('token');
+              localStorage.removeItem('userRole');
+              localStorage.removeItem('userInfo');
+              setIsLoggedIn(false);
+              url.searchParams.delete('ssoToken');
+              window.history.replaceState(null, '', url.toString());
+              return;
+            }
+          } catch {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userInfo');
+            setIsLoggedIn(false);
+            url.searchParams.delete('ssoToken');
+            window.history.replaceState(null, '', url.toString());
+            return;
+          }
           url.searchParams.delete('ssoToken');
           window.history.replaceState(null, '', url.toString());
         }
       }
 
-      // 2) 若本地已有 token，优先从 token 解出 role，确保首落地即可拿到正确角色
+      // 2) 若本地已有 token，解码校验角色
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       if (token) {
         try {
           const payloadBase64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
-          if (payloadBase64) {
-            const payload = JSON.parse(atob(payloadBase64));
-            if (payload?.role) {
-              localStorage.setItem('userRole', payload.role);
-              setResolvedRole(payload.role);
+          const payload = payloadBase64 ? JSON.parse(atob(payloadBase64)) : null;
+          if (payload?.role) {
+            if (payload.role !== expectedRole) {
+              // 跨端残留：清理并回登录
+              localStorage.removeItem('token');
+              localStorage.removeItem('userRole');
+              localStorage.removeItem('userInfo');
+              setIsLoggedIn(false);
+              return;
             }
+            localStorage.setItem('userRole', payload.role);
+            setResolvedRole(payload.role);
           }
-        } catch { }
+        } catch {
+          // token 异常同样视为未登录
+          localStorage.removeItem('token');
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userInfo');
+          setIsLoggedIn(false);
+          return;
+        }
         // 视为已登录，但继续请求 profile 以刷新 userInfo，避免沿用旧数据
         setIsLoggedIn(true);
       }
+
       try {
         const res: any = await AuthService.getProfile();
         if ((res?.code === 200) || (res?.data && (res as any).status === 200)) {
           const user = (res.data?.user) || (res.data);
-          if (user?.role) { localStorage.setItem('userRole', user.role); setResolvedRole(user.role); }
-          if (user) localStorage.setItem('userInfo', JSON.stringify(user));
-          setIsLoggedIn(true);
+          if (user?.role === expectedRole) {
+            localStorage.setItem('userRole', user.role);
+            setResolvedRole(user.role);
+            if (user) localStorage.setItem('userInfo', JSON.stringify(user));
+            setIsLoggedIn(true);
+          } else {
+            // 服务端返回的角色也不匹配，清理并回登录
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userInfo');
+            setIsLoggedIn(false);
+          }
         } else if (!token) {
           setIsLoggedIn(false);
         }

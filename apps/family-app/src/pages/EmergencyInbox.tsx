@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { socket, registerUser } from '../socket';
+import WebSocketService from '../services/websocket.service';
 
 type Payload = {
   alertId: string;
@@ -13,10 +13,10 @@ type Payload = {
 export default function EmergencyInbox({ currentUserId }: { currentUserId: string }) {
   const [items, setItems] = useState<Payload[]>([]);
   useEffect(() => {
-    registerUser(currentUserId);
+    try { void WebSocketService.connect(currentUserId); } catch { }
     const handler = (data: Payload) => setItems(prev => [data, ...prev]);
-    socket.on('emergency:updated', handler);
-    return () => { socket.off('emergency:updated', handler); };
+    try { WebSocketService.addEventListener('emergency:updated', handler); } catch { }
+    return () => { try { WebSocketService.removeEventListener('emergency:updated', handler); } catch { } };
   }, [currentUserId]);
 
   return (

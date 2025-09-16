@@ -2,15 +2,17 @@ import { Server } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 
 export const initSocket = (server: HttpServer) => {
+  const allowAll = process.env.ALLOW_CORS_ALL === '1' || process.env.NODE_ENV !== 'production';
+  const defaultOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:5176'
+  ];
   const io = new Server(server, {
     path: '/socket.io',
     cors: {
-      origin: [
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:5175',
-        'http://localhost:5176'
-      ],
+      origin: allowAll ? true : defaultOrigins,
       credentials: true
     },
     transports: ['polling']

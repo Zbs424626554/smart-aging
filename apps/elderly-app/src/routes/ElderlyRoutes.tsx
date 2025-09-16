@@ -23,6 +23,7 @@ const RootRedirect: React.FC = () => {
   useEffect(() => {
     const checkLogin = async () => {
       try {
+        const expectedRole = "elderly";
         // 1) 优先处理 URL 携带的 ssoToken（跨端跳转时注入）
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href);
@@ -36,6 +37,16 @@ const RootRedirect: React.FC = () => {
                 if (payload?.role) {
                   localStorage.setItem('userRole', payload.role);
                   setResolvedRole(payload.role);
+                  // 若角色与本端不一致，则不再发 profile，避免写入他端 userInfo
+                  if (payload.role !== expectedRole) {
+                    localStorage.removeItem('userInfo');
+                    // 视为已登录但角色不匹配，交由渲染分支跳回登录
+                    setIsLoggedIn(true);
+                    // 清理 URL 参数并提前返回
+                    url.searchParams.delete('ssoToken');
+                    window.history.replaceState(null, '', url.toString());
+                    return;
+                  }
                 }
               }
             } catch { }
@@ -55,6 +66,11 @@ const RootRedirect: React.FC = () => {
               if (payload?.role) {
                 localStorage.setItem('userRole', payload.role);
                 setResolvedRole(payload.role);
+                if (payload.role !== expectedRole) {
+                  localStorage.removeItem('userInfo');
+                  setIsLoggedIn(true);
+                  return;
+                }
               }
             }
           } catch { }

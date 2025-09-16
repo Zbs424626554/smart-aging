@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './Warnings.module.css';
-import { socket, registerUser } from '../socket';
+// 移除 socket.io，统一使用 WebSocketService 443/ws
+import WebSocketService from '../services/websocket.service';
 import { AuthService } from '../services/auth.service';
 import request, { http } from '../utils/request';
 import PageHeader from '../components/PageHeader';
@@ -36,9 +37,9 @@ const Warnings: React.FC = () => {
 
   useEffect(() => {
     const user = AuthService.getCurrentUser();
-    const uid = user?.id || (user as any)?._id;
-    if (uid) {
-      registerUser(uid);
+    const username = (user as any)?.username;
+    if (username) {
+      try { void WebSocketService.connect(username); } catch { }
     }
     const mapList = (arr: any[]) => {
       const mapped = arr.map((p: any) => {
@@ -109,9 +110,9 @@ const Warnings: React.FC = () => {
         return [newItem, ...prev];
       });
     };
-    socket.off('emergency:updated');
-    socket.on('emergency:updated', handler);
-    return () => { socket.off('emergency:updated', handler); };
+    // 使用全局 WS 监听 emergency:updated
+    try { WebSocketService.addEventListener('emergency:updated', handler); } catch { }
+    return () => { try { WebSocketService.removeEventListener('emergency:updated', handler); } catch { } };
   }, []);
 
   const getWarningColor = (type: string) => {

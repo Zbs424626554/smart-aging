@@ -95,6 +95,13 @@ const messageItemSchema = new Schema(
 // 主消息文档Schema
 const messageSchema = new Schema(
   {
+    key: {
+      type: String,
+      required: false, // 兼容历史数据
+      index: true,
+      unique: false,
+      sparse: true,
+    },
     users: {
       type: [userSchema],
       required: true,
@@ -122,6 +129,10 @@ messageSchema.index({ "users.username": 1 });
 messageSchema.index({ "messages.sender": 1 });
 messageSchema.index({ "messages.send_time": -1 });
 messageSchema.index({ createdAt: -1 });
+// 参与者复合索引，加速两人会话命中
+messageSchema.index({ "users.username": 1, "users.role": 1, createdAt: -1 });
+// 唯一键：两人会话 key（username 排序后 join）
+messageSchema.index({ key: 1 }, { unique: true, sparse: true });
 
 // 静态方法：根据用户名查找对话
 messageSchema.statics.findByUser = function (username) {

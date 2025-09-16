@@ -1,6 +1,10 @@
 import { io } from 'socket.io-client';
 
-export const socket = io('http://localhost:3001', {
+const socketBaseUrl =
+  (import.meta as any).env?.VITE_SOCKET_IO_URL ||
+  `${location.protocol === 'https:' ? 'https' : 'http'}://${location.hostname}:3001`;
+
+export const socket = io(socketBaseUrl, {
   path: '/socket.io',
   transports: ['polling'],
   withCredentials: true,

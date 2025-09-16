@@ -36,12 +36,21 @@ const io = initSocket(server);
 app.use(cookieParser());
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
-      "http://localhost:5176",
-    ],
+    origin: (origin, callback) => {
+      // 生产环境严格校验，开发或显式放开则允许任意来源，便于局域网跨设备联调
+      const allowAll = process.env.ALLOW_CORS_ALL === '1' || process.env.NODE_ENV !== 'production';
+      const whitelist = new Set([
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175',
+        'http://localhost:5176',
+      ]);
+      if (allowAll || !origin || whitelist.has(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
   })
 );
@@ -83,7 +92,7 @@ app.use("/api", newDevelopCommunityRoutes);
 app.use("/api", newDevelopSttRoutes);
 app.use("/api", newDevelopFriendRoutes);
 app.use("/api/elderorder", elderOrderRoutes);
-app.use('/api/service',serviceRoutes)
+app.use('/api/service', serviceRoutes)
 
 // WebSocket服务器设置
 
@@ -120,13 +129,13 @@ const heartbeatInterval = setInterval(() => {
     if (c.isAlive === false) {
       try {
         c.terminate();
-      } catch {}
+      } catch { }
       return;
     }
     c.isAlive = false;
     try {
       c.ping();
-    } catch {}
+    } catch { }
   });
 }, 30000);
 

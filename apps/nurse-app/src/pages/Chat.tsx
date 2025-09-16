@@ -737,17 +737,30 @@ export default function Chat() {
     }
   };
 
-  // WebRTC配置
+  // WebRTC配置（支持可选 TURN）
+  const iceServers: RTCIceServer[] = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ];
+  const turnUrl = (import.meta as any).env?.VITE_TURN_URL as string | undefined;
+  const turnUser = (import.meta as any).env?.VITE_TURN_USER as string | undefined;
+  const turnCred = (import.meta as any).env?.VITE_TURN_CRED as string | undefined;
+  if (turnUrl && turnUser && turnCred) {
+    iceServers.push({ urls: turnUrl, username: turnUser, credential: turnCred } as any);
+  }
   const rtcConfiguration = {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:stun1.l.google.com:19302" },
-    ],
-  };
+    iceServers,
+    iceCandidatePoolSize: 8,
+  } as RTCConfiguration;
 
   // 获取音频流
   const getAudioStream = async () => {
     try {
+      if (!('mediaDevices' in navigator) || !navigator.mediaDevices?.getUserMedia) {
+        const reason = !window.isSecureContext ? '当前为 HTTP 访问，浏览器出于安全限制禁止麦克风访问。请使用 HTTPS 或在本机 localhost 访问。' : '当前浏览器不支持 getUserMedia。';
+        message.error(reason);
+        throw new Error('Unsupported mediaDevices or insecure context');
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: false,
@@ -764,6 +777,11 @@ export default function Chat() {
   // 获取音视频流（用于视频通话）
   const getVideoStream = async () => {
     try {
+      if (!('mediaDevices' in navigator) || !navigator.mediaDevices?.getUserMedia) {
+        const reason = !window.isSecureContext ? '当前为 HTTP 访问，浏览器出于安全限制禁止摄像头/麦克风访问。请使用 HTTPS 或在本机 localhost 访问。' : '当前浏览器不支持 getUserMedia。';
+        message.error(reason);
+        throw new Error('Unsupported mediaDevices or insecure context');
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,

@@ -67,8 +67,11 @@ export class WebSocketService {
       this.currentUser = username;
       this.isConnecting = true;
 
-      // 使用开发环境的WebSocket地址
-      const wsUrl = `ws://localhost:3001/ws?username=${encodeURIComponent(username)}`;
+      // 使用可配置的 WebSocket 地址，默认取当前主机:3001
+      const baseWsUrl =
+        (import.meta as any).env?.VITE_WS_URL ||
+        `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:3001/ws`;
+      const wsUrl = `${baseWsUrl}?username=${encodeURIComponent(username)}`;
 
       try {
         this.ws = new WebSocket(wsUrl);

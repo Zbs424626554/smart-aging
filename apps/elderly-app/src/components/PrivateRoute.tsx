@@ -38,6 +38,11 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
     }
   }
 
+  // 若需要角色但当前尚未解析出角色，则回根路径等待 RootRedirect 解码 token
+  if (requiredRoles.length > 0 && !currentRole) {
+    return <Navigate to={'/'} replace />;
+  }
+
   return <>{children}</>;
 };
 

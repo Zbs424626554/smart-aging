@@ -509,7 +509,7 @@ export default function Chat() {
           handleConversationUpdated
         );
 
-        WebSocketService.disconnect();
+        // 保持全局 WebSocket 连接由 App 统一管理，这里仅移除监听
       } catch (error) {
         // 静默处理断开连接的错误
         console.warn("WebSocket断开连接时出错:", error);
@@ -769,19 +769,33 @@ export default function Chat() {
     }
   };
 
-  // WebRTC配置
+  // WebRTC配置（支持可选 TURN）
+  const iceServers: RTCIceServer[] = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ];
+  const turnUrl = (import.meta as any).env?.VITE_TURN_URL as string | undefined;
+  const turnUser = (import.meta as any).env?.VITE_TURN_USER as string | undefined;
+  const turnCred = (import.meta as any).env?.VITE_TURN_CRED as string | undefined;
+  if (turnUrl && turnUser && turnCred) {
+    iceServers.push({ urls: turnUrl, username: turnUser, credential: turnCred } as any);
+  }
   const rtcConfiguration = {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:stun1.l.google.com:19302" },
-    ],
-  };
+    iceServers,
+    iceCandidatePoolSize: 8,
+  } as RTCConfiguration;
 
   // 获取音频流
   const getAudioStream = async () => {
     try {
+      // 必须在安全上下文(HTTPS或localhost)下才有 mediaDevices
+      if (!('mediaDevices' in navigator) || !navigator.mediaDevices?.getUserMedia) {
+        const reason = !window.isSecureContext ? '当前为 HTTP 访问，浏览器出于安全限制禁止麦克风访问。请使用 HTTPS 或在本机 localhost 访问。' : '当前浏览器不支持 getUserMedia。';
+        message.error(reason);
+        throw new Error('Unsupported mediaDevices or insecure context');
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: false,
       });
       localStreamRef.current = stream;
@@ -796,8 +810,13 @@ export default function Chat() {
   // 获取音视频流（用于视频通话）
   const getVideoStream = async () => {
     try {
+      if (!('mediaDevices' in navigator) || !navigator.mediaDevices?.getUserMedia) {
+        const reason = !window.isSecureContext ? '当前为 HTTP 访问，浏览器出于安全限制禁止摄像头/麦克风访问。请使用 HTTPS 或在本机 localhost 访问。' : '当前浏览器不支持 getUserMedia。';
+        message.error(reason);
+        throw new Error('Unsupported mediaDevices or insecure context');
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: true,
       });
       localStreamRef.current = stream;
@@ -1245,21 +1264,28 @@ export default function Chat() {
   };
 
   // 获取对话详情
+  const inflightRef = useRef<string | null>(null);
+  const lastFetchTsRef = useRef<number>(0);
   const fetchConversationDetail = async (silent: boolean = false) => {
     if (!id) return;
+    const now = Date.now();
+    if (inflightRef.current === id || now - lastFetchTsRef.current < 10000) {
+      return; // 距离上次拉取<10s或仍在请求中，跳过
+    }
+    inflightRef.current = id;
 
     try {
       if (!silent) setLoading(true);
       // 支持超时与取消，提供指数退避重试
       const controller = new AbortController();
-      const maxAttempts = 3;
+      const maxAttempts = 2;
       let attempt = 0;
       let data: any;
       let lastErr: any;
       while (attempt < maxAttempts) {
         try {
           data = await MessageService.getConversationDetail(id, {
-            timeoutMs: 8000,
+            timeoutMs: 5000,
             signal: controller.signal,
           });
           break;
@@ -1268,15 +1294,17 @@ export default function Chat() {
           attempt += 1;
           if (attempt >= maxAttempts) throw e;
           // 退避等待
-          await new Promise((r) => setTimeout(r, 500 * attempt));
+          await new Promise((r) => setTimeout(r, 400 * attempt));
         }
       }
       setConversation(data);
       setMessages(data.messages || []);
+      lastFetchTsRef.current = Date.now();
     } catch (error) {
       console.error("获取对话详情失败:", error);
       message.error("获取聊天记录失败，已自动重试");
     } finally {
+      inflightRef.current = null;
       if (!silent) setLoading(false);
     }
   };

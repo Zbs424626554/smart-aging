@@ -178,7 +178,40 @@ export class MessageService {
   }) {
     const { data: responseData } = await http.post(
       "/conversation/create",
-      data
+      data,
+      { timeout: 5000 }
+    );
+    return responseData;
+  }
+
+  // 原子：获取或创建两人会话
+  static async getOrCreateConversation(data: {
+    participants: Array<{ username: string; realname?: string; role: string }>;
+    initialMessage?: { content: string; type?: string };
+  }) {
+    const { data: responseData } = await http.post(
+      "/conversation/get-or-create",
+      data,
+      { timeout: 5000 }
+    );
+    return responseData;
+  }
+
+  // 兜底：通过 /send 在两人间新建对话并发第一条消息
+  static async sendMessageByPair(data: {
+    sender: string;
+    receiver: string;
+    content: string;
+    type?: string;
+    senderRole?: string;
+    receiverRole?: string;
+    senderRealname?: string;
+    receiverRealname?: string;
+  }) {
+    const { data: responseData } = await http.post(
+      "/send",
+      data,
+      { timeout: 5000 }
     );
     return responseData;
   }

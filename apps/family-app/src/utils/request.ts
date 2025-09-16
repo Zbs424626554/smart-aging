@@ -15,18 +15,35 @@ export interface RequestConfig extends AxiosRequestConfig {
   showSuccess?: boolean; // 是否显示成功信息
 }
 
-// 获取API基础URL
+// 获取API基础URL（支持反代端口与显式环境变量覆盖）
 const getApiBaseUrl = () => {
-  // 在浏览器环境中，使用import.meta.env（Vite）或window.location
-  if (typeof window !== 'undefined') {
-    // 开发环境
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3001/api';
+  // 显式覆盖优先：若配置了 VITE_SOCKET_IO_URL 或 VITE_API_BASE_URL，则以其为准
+  const envUrl = (import.meta as any).env?.VITE_SOCKET_IO_URL || (import.meta as any).env?.VITE_API_BASE_URL;
+  if (envUrl) {
+    try {
+      const u = new URL(envUrl);
+      return `${u.protocol}//${u.hostname}${u.port ? `:${u.port}` : ''}/api`;
+    } catch {
+      return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;
     }
-    // 生产环境
+  }
+
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname, port } = window.location;
+    const isViteDevPort = /^(5173|5174|5175|5176)$/.test(port || '');
+    const isReverseProxyPort = /^(444|4445|446)$/.test(port || '');
+
+    if (isViteDevPort) {
+      // 直连开发服务 → 转发到本机 3001
+      return `${protocol}//${hostname}:3001/api`;
+    }
+    if (isReverseProxyPort) {
+      // 经 Nginx 反代（页面在 444/4445/446），API 固定走 443
+      return `${protocol}//${hostname}:443/api`;
+    }
+    // 生产或已有反向代理
     return '/api';
   }
-  // 服务端环境
   return process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api';
 };
 

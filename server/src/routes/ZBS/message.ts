@@ -47,12 +47,12 @@ router.get("/messagelist", async (req: Request, res: Response) => {
         users: participants,
         lastMessage: lastMessage
           ? {
-              sender: lastMessage.sender,
-              content: lastMessage.content,
-              sendTime: lastMessage.send_time,
-              type: lastMessage.type,
-              receiver: lastMessage.receiver,
-            }
+            sender: lastMessage.sender,
+            content: lastMessage.content,
+            sendTime: lastMessage.send_time,
+            type: lastMessage.type,
+            receiver: lastMessage.receiver,
+          }
           : null,
         messageCount: conversation.messages.length,
         createdAt: conversation.createdAt,
@@ -111,12 +111,12 @@ router.get("/messagelist/:username", async (req: Request, res: Response) => {
         avatar: "", // 可以后续添加头像逻辑
         lastMessage: lastMessage
           ? {
-              id: `${conversation._id}_${conversation.messages.length - 1}`,
-              content: lastMessage.content,
-              timestamp: new Date(lastMessage.send_time),
-              isRead: true, // 简化处理，后续可以添加已读逻辑
-              type: lastMessage.type || "text",
-            }
+            id: `${conversation._id}_${conversation.messages.length - 1}`,
+            content: lastMessage.content,
+            timestamp: new Date(lastMessage.send_time),
+            isRead: true, // 简化处理，后续可以添加已读逻辑
+            type: lastMessage.type || "text",
+          }
           : null,
         unreadCount: 0, // 简化处理，后续可以添加未读计数逻辑
         isOnline: false, // 简化处理，后续可以添加在线状态逻辑
@@ -440,10 +440,77 @@ router.post("/send", async (req: Request, res: Response) => {
   }
 });
 
+// 原子化：获取或创建两人会话（单次往返，快返）
+router.post("/conversation/get-or-create", async (req: Request, res: Response) => {
+  try {
+    const { participants, initialMessage } = req.body as any;
+    if (!participants || !Array.isArray(participants) || participants.length !== 2) {
+      return res.status(400).json({ code: 400, message: "需要且仅支持两人会话", data: null });
+    }
+    const norm = participants.map((p: any) => ({
+      username: p.username,
+      realname: p.realname || p.username,
+      role: p.role,
+    }));
+    const usernames = norm.map((p: any) => p.username);
+    const key = usernames.slice().sort().join('#');
+
+    // 先尝试按 key 命中
+    let doc = await Message.findOne({ key }, { _id: 1 }).lean();
+    if (!doc) {
+      // 插入时附带 key，若竞态导致重复，捕获 11000 后再查一次
+      try {
+        const created = await new Message({ key, users: norm, messages: [] }).save();
+        doc = { _id: created._id } as any;
+      } catch (e: any) {
+        if (e?.code === 11000) {
+          const existed = await Message.findOne({ key }, { _id: 1 }).lean();
+          if (existed) doc = existed;
+        } else {
+          throw e;
+        }
+      }
+    }
+
+    // 快返
+    res.json({ code: 200, message: "ok", data: { conversationId: doc?._id, isExisting: true } });
+
+    // 异步写入初始消息与广播
+    if (initialMessage?.content && doc?._id) {
+      setImmediate(async () => {
+        try {
+          const firstMessage: any = {
+            sender: norm[0].username,
+            send_time: Date.now(),
+            content: initialMessage.content,
+            type: initialMessage.type || "text",
+            receiver: [norm[1].username],
+          };
+          await Message.updateOne({ _id: doc._id }, { $push: { messages: firstMessage } });
+          try {
+            broadcastConversationCreated({
+              conversationId: doc._id,
+              participants: usernames,
+              participantDetails: norm,
+              isNew: true,
+              timestamp: Date.now(),
+            });
+          } catch { }
+        } catch (e) {
+          console.error("get-or-create 异步初始消息失败:", e);
+        }
+      });
+    }
+  } catch (error) {
+    console.error("get-or-create 会话失败:", error);
+    res.status(500).json({ code: 500, message: "会话获取失败", data: null });
+  }
+});
+
 // 创建新对话接口
 router.post("/conversation/create", async (req: Request, res: Response) => {
   try {
-    const { participants, initialMessage } = req.body;
+    const { participants, initialMessage } = req.body as any;
 
     // 验证参数
     if (
@@ -458,13 +525,13 @@ router.post("/conversation/create", async (req: Request, res: Response) => {
       });
     }
 
-    // 检查是否已存在相同参与者的对话（两人对话）
+    // 检查是否已存在相同参与者的对话（两人对话）- 命中立即快返
     if (participants.length === 2) {
-      const usernames = participants.map((p) => p.username);
+      const usernames = participants.map((p: any) => p.username);
       const existingConversation = await Message.findOne({
         "users.username": { $all: usernames },
         $expr: { $eq: [{ $size: "$users" }, 2] },
-      });
+      }).lean();
 
       if (existingConversation) {
         return res.json({
@@ -478,43 +545,18 @@ router.post("/conversation/create", async (req: Request, res: Response) => {
       }
     }
 
-    // 创建新对话
+    // 创建新对话：先最小保存（仅 users），快返 conversationId，后续消息写入/广播异步处理
     const newConversation = new Message({
-      users: participants.map((p) => ({
+      users: participants.map((p: any) => ({
         username: p.username,
         realname: p.realname || p.username,
         role: p.role,
       })),
       messages: [],
     });
-
-    // 如果提供了初始消息，添加到对话中
-    if (initialMessage && initialMessage.content) {
-      const firstMessage = {
-        sender: participants[0].username,
-        send_time: Date.now(),
-        content: initialMessage.content,
-        type: initialMessage.type || "text",
-        receiver: participants.slice(1).map((p) => p.username),
-      };
-      newConversation.messages.push(firstMessage);
-    }
-
     await newConversation.save();
 
-    // 广播对话创建事件
-    try {
-      broadcastConversationCreated({
-        conversationId: newConversation._id,
-        participants: participants.map((p) => p.username),
-        participantDetails: participants,
-        isNew: true,
-        timestamp: Date.now(),
-      });
-    } catch (error) {
-      console.warn("广播对话创建事件失败:", error);
-    }
-
+    // 快速响应
     res.json({
       code: 200,
       message: "对话创建成功",
@@ -522,6 +564,38 @@ router.post("/conversation/create", async (req: Request, res: Response) => {
         conversationId: newConversation._id,
         isExisting: false,
       },
+    });
+
+    // 异步写入初始消息与广播
+    setImmediate(async () => {
+      try {
+        if (initialMessage && initialMessage.content) {
+          const firstMessage: any = {
+            sender: participants[0].username,
+            send_time: Date.now(),
+            content: initialMessage.content,
+            type: initialMessage.type || "text",
+            receiver: participants.slice(1).map((p: any) => p.username),
+          };
+          await Message.updateOne(
+            { _id: newConversation._id },
+            { $push: { messages: firstMessage } }
+          );
+        }
+        try {
+          broadcastConversationCreated({
+            conversationId: newConversation._id,
+            participants: participants.map((p: any) => p.username),
+            participantDetails: participants,
+            isNew: true,
+            timestamp: Date.now(),
+          });
+        } catch (err) {
+          console.warn("广播对话创建事件失败:", err);
+        }
+      } catch (err) {
+        console.error("创建会话后异步处理失败:", err);
+      }
     });
   } catch (error) {
     console.error("创建对话失败:", error);

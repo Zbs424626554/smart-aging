@@ -69,8 +69,26 @@ export class WebSocketService {
       this.currentUser = username;
       this.isConnecting = true;
 
-      // 使用开发环境的WebSocket地址
-      const wsUrl = `ws://localhost:3001/ws?username=${encodeURIComponent(username)}`;
+      // 使用可配置的 WebSocket 地址；若未配置，则根据端口智能推断
+      let baseWsUrl = (import.meta as any).env?.VITE_WS_URL as string | undefined;
+      if (!baseWsUrl) {
+        const isHttps = location.protocol === 'https:';
+        const scheme = isHttps ? 'wss' : 'ws';
+        const port = location.port || '';
+        const isViteDevPort = /^(5173|5174|5175|5176)$/.test(port);
+        const isReverseProxyPort = /^(444|4445|446)$/.test(port);
+        if (isReverseProxyPort) {
+          // 页面走反代端口 -> WS 走 443
+          baseWsUrl = `${scheme}://${location.hostname}:443/ws`;
+        } else if (isViteDevPort) {
+          // 本地开发直连 3001
+          baseWsUrl = `${scheme}://${location.hostname}:3001/ws`;
+        } else {
+          // 生产或其它情况，优先尝试同源 '/ws'
+          baseWsUrl = `${scheme}://${location.host}/ws`;
+        }
+      }
+      const wsUrl = `${baseWsUrl}?username=${encodeURIComponent(username)}`;
 
       try {
         this.ws = new WebSocket(wsUrl);

@@ -21,17 +21,46 @@ const Login: React.FC = () => {
       const response = await AuthService.login(loginParams);
       console.log('登录响应:', response);
 
-      // 保存用户信息到本地存储
-      AuthService.saveUserInfo(response.data.token, response.data.user);
+      // 注意：统一登录页不在本端写入 localStorage，避免跨端污染。
+      // 仅根据角色做跨端跳转，并通过 URL 传递 ssoToken 由目标端落地后写入本地。
 
       message.success('登录成功');
       const role = response.data.user.role;
       console.log('用户角色:', role);
 
+      // 根据当前访问的主机与端口动态计算重定向地址
+      const { protocol, hostname, port } = window.location;
+      const base = `${protocol}//${hostname}`;
+      const isDevPort = /^(5173|5174|5175|5176)$/.test(port || "");
+      const isReverseProxyPort = /^(444|4445|446)$/.test(port || "");
+
+      // 允许通过环境变量覆盖（生产部署时可分别配置各端域名）
+      const envMap: Record<string, string | undefined> = {
+        elderly: (import.meta as any).env?.VITE_REDIRECT_ELDERLY,
+        family: (import.meta as any).env?.VITE_REDIRECT_FAMILY,
+        nurse: (import.meta as any).env?.VITE_REDIRECT_NURSE,
+      };
+
+      const devMap: Record<string, string> = {
+        elderly: `${base}:5173/`,
+        family: `${base}:5174/`,
+        nurse: `${base}:5175/`,
+      };
+
+      // 反代端口映射（同一台机器多端口）
+      const reversePortMap: Record<string, string> = {
+        elderly: '4445',
+        family: '444',
+        nurse: '446',
+      };
+
       const roleRedirectMap: Record<string, string> = {
-        elderly: "http://localhost:5173/",
-        family: "http://localhost:5174/",
-        nurse: "http://localhost:5175/",
+        elderly: envMap.elderly
+          || (isDevPort ? devMap.elderly : isReverseProxyPort ? `${base}:${reversePortMap.elderly}/` : `${base}/`),
+        family: envMap.family
+          || (isDevPort ? devMap.family : isReverseProxyPort ? `${base}:${reversePortMap.family}/` : `${base}/`),
+        nurse: envMap.nurse
+          || (isDevPort ? devMap.nurse : isReverseProxyPort ? `${base}:${reversePortMap.nurse}/` : `${base}/`),
       };
 
       const redirectUrl = roleRedirectMap[role];

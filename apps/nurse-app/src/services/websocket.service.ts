@@ -1,19 +1,19 @@
 // WebSocket服务，用于实时消息通信
 export interface WebSocketMessage {
   type:
-    | "message"
-    | "user_online"
-    | "user_offline"
-    | "typing"
-    | "stop_typing"
-    | "call_invite"
-    | "call_response"
-    | "call_cancel"
-    | "call_end"
-    | "webrtc_offer"
-    | "webrtc_answer"
-    | "webrtc_ice_candidate"
-    | "conversation_updated";
+  | "message"
+  | "user_online"
+  | "user_offline"
+  | "typing"
+  | "stop_typing"
+  | "call_invite"
+  | "call_response"
+  | "call_cancel"
+  | "call_end"
+  | "webrtc_offer"
+  | "webrtc_answer"
+  | "webrtc_ice_candidate"
+  | "conversation_updated";
   data: any;
   conversationId?: string;
   sender?: string;
@@ -32,7 +32,7 @@ export class WebSocketService {
   private isConnecting = false;
   private currentUser: string | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): WebSocketService {
     if (!WebSocketService.instance) {
@@ -67,8 +67,11 @@ export class WebSocketService {
       this.currentUser = username;
       this.isConnecting = true;
 
-      // 使用开发环境的WebSocket地址
-      const wsUrl = `ws://localhost:3001/ws?username=${encodeURIComponent(username)}`;
+      // 使用可配置的 WebSocket 地址，默认取当前主机:3001
+      const baseWsUrl =
+        (import.meta as any).env?.VITE_WS_URL ||
+        `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:3001/ws`;
+      const wsUrl = `${baseWsUrl}?username=${encodeURIComponent(username)}`;
 
       try {
         this.ws = new WebSocket(wsUrl);
@@ -134,7 +137,7 @@ export class WebSocketService {
           if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
             try {
               this.ws.close();
-            } catch {}
+            } catch { }
             this.isConnecting = false;
             reject(new Error("WebSocket连接超时"));
             this.scheduleReconnect();

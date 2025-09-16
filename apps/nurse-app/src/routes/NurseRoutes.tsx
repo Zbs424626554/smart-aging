@@ -26,12 +26,27 @@ const RootRedirect: React.FC = () => {
   useEffect(() => {
     const checkLogin = async () => {
       try {
+        const expectedRole = "nurse";
         // 1) 读取 URL 中的 ssoToken 并写入本地
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href);
           const ssoToken = url.searchParams.get('ssoToken');
           if (ssoToken) {
             localStorage.setItem('token', ssoToken);
+            try {
+              const payloadBase64 = ssoToken.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+              if (payloadBase64) {
+                const payload = JSON.parse(atob(payloadBase64));
+                if (payload?.role) { localStorage.setItem('userRole', payload.role); setResolvedRole(payload.role); }
+                if (payload?.role && payload.role !== expectedRole) {
+                  localStorage.removeItem('userInfo');
+                  setIsLoggedIn(true);
+                  url.searchParams.delete('ssoToken');
+                  window.history.replaceState(null, '', url.toString());
+                  return;
+                }
+              }
+            } catch { }
             url.searchParams.delete('ssoToken');
             window.history.replaceState(null, '', url.toString());
           }
@@ -45,6 +60,11 @@ const RootRedirect: React.FC = () => {
             if (payloadBase64) {
               const payload = JSON.parse(atob(payloadBase64));
               if (payload?.role) { localStorage.setItem('userRole', payload.role); setResolvedRole(payload.role); }
+              if (payload?.role && payload.role !== expectedRole) {
+                localStorage.removeItem('userInfo');
+                setIsLoggedIn(true);
+                return;
+              }
             }
           } catch { }
           // 视为已登录，但继续请求 profile 以刷新 userInfo

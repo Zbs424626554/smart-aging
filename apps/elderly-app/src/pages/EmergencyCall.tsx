@@ -136,7 +136,8 @@ export default function EmergencyCall() {
         }
         const elderUsername = (meUser as any)?.username || '';
         const familyUsername = receivers[0];
-        const createRes: any = await MessageService.createConversation({
+        // 优先尝试原子 get-or-create，单次往返快返 conversationId
+        const createRes: any = await MessageService.getOrCreateConversation({
           participants: [
             { username: elderUsername, role: 'elderly' },
             { username: familyUsername, role: 'family' }
@@ -154,7 +155,28 @@ export default function EmergencyCall() {
       } else {
         console.warn('[Emergency] no receivers');
       }
-    } catch (e) { console.error('[Emergency] jump chat failed', e); }
+    } catch (e) {
+      console.error('[Emergency] jump chat failed', e);
+      // 兜底：降级为 /send 创建后端会话
+      try {
+        const meUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const myUsername = meUser?.username || meUser?.realname || '';
+        const receivers = await emergency.getReceivers(savedAlertId!);
+        const familyUsername = receivers[0];
+        const fallbackRes: any = await MessageService.sendMessageByPair({
+          sender: myUsername,
+          receiver: familyUsername,
+          content: JSON.stringify({ kind: 'voice_call_invite', alertId: savedAlertId }),
+          type: 'voice_call',
+          senderRole: 'elderly',
+          receiverRole: 'family',
+          senderRealname: myUsername,
+          receiverRealname: familyUsername
+        });
+        const cid = fallbackRes?.data?.conversationId || fallbackRes?.conversationId;
+        if (cid) navigate(`/chat/${cid}?call=1&alertId=${savedAlertId}`);
+      } catch (e2) { console.error('[Emergency] fallback send failed', e2); }
+    }
   };
 
   return (
