@@ -6,6 +6,7 @@ import { User } from '../models/user.model';
 import { analyzeEmergency } from '../ai/analyze';
 import { transcribeBase64Audio } from '../ai/transcribe';
 import { placeEmergencyCall } from '../services/voiceCall.service';
+import { broadcastEmergencyUpdated } from '../index';
 
 async function resolveEmergencyReceivers(elderlyUserId: string): Promise<string[]> {
   try {
@@ -125,6 +126,8 @@ export const commitEmergency = (io: IOServer) => async (req: Request, res: Respo
   } else {
     emitToReceivers(io, receivers, 'emergency:updated', callingPayload);
   }
+  // 同步通过原生WS广播，确保前端 WS 客户端也能收到
+  broadcastEmergencyUpdated(callingPayload, receivers);
   if (contactPhone) {
     // 不依赖高风险判定，直接拨号（异步）
     placeEmergencyCall(contactPhone, '检测到紧急情况，请尽快联系老人或前往查看。').catch(() => void 0);
@@ -161,6 +164,7 @@ export const commitEmergency = (io: IOServer) => async (req: Request, res: Respo
       } else {
         emitToReceivers(io, receivers, 'emergency:updated', analyzedPayload);
       }
+      broadcastEmergencyUpdated(analyzedPayload, receivers);
     } catch (e) {
       console.error('[Emergency] Background analyze failed:', e);
     }

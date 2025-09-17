@@ -101,6 +101,15 @@ export class WebSocketService {
         this.ws.onmessage = (event) => {
           try {
             const message: WebSocketMessage = JSON.parse(event.data);
+            if (
+              message?.type === 'call_invite' ||
+              message?.type === 'webrtc_offer' ||
+              message?.type === 'webrtc_answer' ||
+              message?.type === 'webrtc_ice_candidate' ||
+              message?.type === 'call_response'
+            ) {
+              console.log('[WS] recv', message.type, message);
+            }
             this.handleMessage(message);
           } catch (error) {
             console.warn("解析WebSocket消息失败:", error);
@@ -179,6 +188,12 @@ export class WebSocketService {
   // 发送消息
   send(message: WebSocketMessage) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      try {
+        const t = message?.type as string;
+        if (t && (t.startsWith('webrtc_') || t.startsWith('call_'))) {
+          console.log('[WS] send', t, message);
+        }
+      } catch { }
       this.ws.send(JSON.stringify(message));
     } else {
       console.warn("WebSocket未连接，无法发送消息");

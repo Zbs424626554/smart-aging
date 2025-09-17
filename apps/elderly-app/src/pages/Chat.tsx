@@ -370,6 +370,7 @@ export default function Chat() {
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const pendingIceRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
   const localVideoRef = useRef<HTMLVideoElement>(null);
   // 自定义拍照（相机）相关
   const [isCameraVisible, setIsCameraVisible] = useState(false);
@@ -631,7 +632,10 @@ export default function Chat() {
       if (data.response === "accept") {
         // 发起方开始建立WebRTC连接（语音/视频通话均需建立）
         try {
-          await initializeWebRTCCall();
+          console.log('[RTC] handleCallResponse accept -> initializeWebRTCCall, responder=', data.responder, 'cid=', data.conversationId);
+          const overrideReceivers = data.responder ? [data.responder] : undefined;
+          await initializeWebRTCCall(overrideReceivers);
+          console.log('[RTC] initializeWebRTCCall finished (offer created & sent)');
         } catch (error) {
           console.error("初始化WebRTC连接失败:", error);
           message.error("建立通话连接失败");
@@ -662,10 +666,11 @@ export default function Chat() {
   };
 
   // 初始化WebRTC通话（发起方）
-  const initializeWebRTCCall = async () => {
-    if (!conversation || !currentUser || !id) return;
+  const initializeWebRTCCall = async (overrideReceivers?: string[]) => {
+    if (!currentUser || !id) return;
 
     try {
+      console.log('[RTC] init start, overrideReceivers=', overrideReceivers, 'cid=', id, 'user=', currentUser?.username);
       // 根据通话类型选择本地媒体
       if (callSession.callType === "video") {
         const stream = await getVideoStream();
@@ -680,6 +685,7 @@ export default function Chat() {
 
       // 创建PeerConnection
       const pc = createPeerConnection();
+      console.log('[RTC] created PC for offer');
 
       // 添加本地音/视频轨到 RTCPeerConnection
       if (localStreamRef.current) {
@@ -693,13 +699,21 @@ export default function Chat() {
       // 创建Offer
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+      console.log('[RTC] offer created & setLocalDescription');
 
       // 发送Offer
-      const receivers = conversation.users
-        .filter((user) => user.username !== currentUser.username)
-        .map((user) => user.username);
-
-      WebSocketService.sendWebRTCOffer(id, offer, receivers);
+      let receivers: string[] | undefined = overrideReceivers;
+      if (!receivers) {
+        if (!conversation) {
+          console.warn('[RTC] initialize skipped: conversation not ready and no override receivers');
+          return;
+        }
+        receivers = conversation.users
+          .filter((user) => user.username !== currentUser.username)
+          .map((user) => user.username);
+      }
+      console.log('[WS] send webrtc_offer ->', receivers);
+      WebSocketService.sendWebRTCOffer(id, offer, receivers!);
       // WebRTC Offer发送成功
     } catch (error) {
       console.error("初始化WebRTC通话失败:", error);
@@ -733,9 +747,10 @@ export default function Chat() {
         callerName: callSession.callerName,
       });
 
-      // 保存通话记录（仅在本端有通话激活时）
+      // 保存通话记录：只由发起方写入，避免双方重复
       if (callSession.isActive) {
-        if (wasConnected && callDuration !== undefined) {
+        const iAmCaller = callSession.caller === currentUser?.username;
+        if (iAmCaller && wasConnected && callDuration !== undefined) {
           await saveCallRecord("connect", callDuration);
         }
       }
@@ -793,11 +808,12 @@ export default function Chat() {
         message.error(reason);
         throw new Error('Unsupported mediaDevices or insecure context');
       }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false,
-      });
+      const constraints: MediaStreamConstraints = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false };
+      console.log('[RTC] request getUserMedia constraints=', constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      stream.getAudioTracks().forEach(t => { t.enabled = true; });
       localStreamRef.current = stream;
+      console.log('[RTC] acquired local audio tracks=', stream.getAudioTracks().map(t => ({ label: t.label, enabled: t.enabled, readyState: t.readyState })));
       return stream;
     } catch (error) {
       console.error("获取音频流失败:", error);
@@ -830,6 +846,11 @@ export default function Chat() {
   // 创建PeerConnection
   const createPeerConnection = () => {
     const pc = new RTCPeerConnection(rtcConfiguration);
+    console.log('[RTC] createPeerConnection with config=', rtcConfiguration);
+    try { (window as any).__pc = pc; } catch { }
+    try {
+      pc.addTransceiver('audio', { direction: 'sendrecv' });
+    } catch (e) { console.warn('[RTC] addTransceiver audio failed', e); }
 
     // 处理ICE候选
     pc.onicecandidate = (event) => {
@@ -848,10 +869,24 @@ export default function Chat() {
       }
     };
 
+    // 额外调试：ICE 收集与错误
+    try {
+      pc.onicegatheringstatechange = () => {
+        console.log('[RTC] iceGatheringState=', pc.iceGatheringState);
+      };
+      (pc as any).onicecandidateerror = (e: any) => {
+        console.warn('[RTC] onicecandidateerror', e);
+      };
+      pc.onnegotiationneeded = () => {
+        console.log('[RTC] onnegotiationneeded');
+      };
+    } catch { }
+
     // 处理远程媒体流
     pc.ontrack = (event) => {
       const remoteStream = event.streams[0];
       if (!remoteStream) return;
+      console.log('[RTC] ontrack kind=', event.track?.kind, 'remote audio tracks=', remoteStream.getAudioTracks().length, 'video tracks=', remoteStream.getVideoTracks().length);
       const hasVideo =
         remoteStream.getVideoTracks().length > 0 ||
         event.track.kind === "video";
@@ -865,6 +900,8 @@ export default function Chat() {
       } else {
         if (remoteAudioRef.current) {
           remoteAudioRef.current.srcObject = remoteStream;
+          remoteAudioRef.current.volume = 1.0;
+          (remoteAudioRef.current as any).muted = false;
           remoteAudioRef.current.play().catch((error) => {
             console.warn("播放远程音频失败:", error);
           });
@@ -875,13 +912,20 @@ export default function Chat() {
     // 连接状态变化
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "connected") {
-        // WebRTC连接建立成功
+        try { remoteAudioRef.current?.play().catch(() => { }); } catch { }
+        console.log('[RTC] connectionState=connected', {
+          senders: pc.getSenders().map(s => ({ kind: s.track?.kind, enabled: s.track?.enabled, state: s.track?.readyState })),
+          receivers: pc.getReceivers().map(r => ({ kind: r.track?.kind, enabled: r.track?.enabled, state: r.track?.readyState })),
+        });
       } else if (
         pc.connectionState === "failed" ||
         pc.connectionState === "closed"
       ) {
         // WebRTC连接失败或关闭
       }
+    };
+    pc.oniceconnectionstatechange = () => {
+      console.log('[RTC] iceConnectionState=', pc.iceConnectionState);
     };
 
     peerConnectionRef.current = pc;
@@ -964,19 +1008,15 @@ export default function Chat() {
 
       // 正在保存通话记录
 
-      // 直接调用服务器API保存通话记录
-      const response = await fetch("http://localhost:3001/api/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      // API响应状态
-
-      if (response.ok) {
-        const responseData = await response.json();
+      // 统一通过 MessageService 走当前基座域（适配 443 反代）
+      const responseData: any = await MessageService.sendMessageByPair({
+        ...requestData,
+      } as any);
+      const isOk =
+        (responseData && (responseData.code === 200 || !!responseData.data)) ||
+        !!responseData?.conversationId ||
+        !!responseData?.messageId;
+      if (isOk) {
         // 通话记录已保存成功
 
         // 刷新聊天记录显示新的通话记录
@@ -993,11 +1033,10 @@ export default function Chat() {
           }
         }
       } else {
-        const errorText = await response.text();
         console.error(
           "保存通话记录失败 - 服务器响应:",
-          response.status,
-          errorText
+          responseData?.status || responseData?.code,
+          responseData
         );
       }
     } catch (error) {
@@ -1058,6 +1097,17 @@ export default function Chat() {
 
         // 设置远程描述
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+        // 应用缓冲的 ICE
+        try {
+          const pendings = pendingIceRef.current.get(id!);
+          if (pendings && pendings.length) {
+            for (const c of pendings) {
+              console.log('[RTC] apply buffered ICE <-', c);
+              await pc.addIceCandidate(new RTCIceCandidate(c));
+            }
+            pendingIceRef.current.delete(id!);
+          }
+        } catch (e) { console.warn('[RTC] apply buffered ICE failed', e); }
 
         // 创建答案
         const answer = await pc.createAnswer();
@@ -1086,6 +1136,16 @@ export default function Chat() {
         await peerConnectionRef.current.setRemoteDescription(
           new RTCSessionDescription(data.answer)
         );
+        try {
+          const pendings = pendingIceRef.current.get(id!);
+          if (pendings && pendings.length) {
+            for (const c of pendings) {
+              console.log('[RTC] apply buffered ICE (offerer) <-', c);
+              await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(c));
+            }
+            pendingIceRef.current.delete(id!);
+          }
+        } catch (e) { console.warn('[RTC] apply buffered ICE (offerer) failed', e); }
         // WebRTC Answer处理成功
       } catch (error) {
         console.error("处理WebRTC Answer失败:", error);
@@ -1102,8 +1162,15 @@ export default function Chat() {
     ) {
       try {
         const candidate = new RTCIceCandidate(data.candidate);
+        if (!peerConnectionRef.current || !peerConnectionRef.current.remoteDescription) {
+          const arr = pendingIceRef.current.get(data.conversationId) || [];
+          arr.push(data.candidate);
+          pendingIceRef.current.set(data.conversationId, arr);
+          console.log('[RTC] buffer ICE <-', data.candidate);
+          return;
+        }
+        console.log('[RTC] addIceCandidate <-', candidate);
         await peerConnectionRef.current.addIceCandidate(candidate);
-        // ICE候选添加成功
       } catch (error) {
         console.error("添加ICE候选失败:", error);
       }
@@ -1217,14 +1284,15 @@ export default function Chat() {
       }
     }
 
-    // 保存通话记录
+    // 保存通话记录：仅由呼叫方写入，避免重复
     if (callSession.isActive) {
-      if (wasConnected && callDuration !== undefined) {
-        // 如果是已连接状态下挂断，保存通话记录
-        await saveCallRecord("connect", callDuration);
-      } else if (callSession.status === "calling") {
-        // 如果是呼叫状态下挂断，保存取消记录
-        await saveCallRecord("cancel");
+      const iAmCaller = callSession.caller === currentUser?.username;
+      if (iAmCaller) {
+        if (wasConnected && callDuration !== undefined) {
+          await saveCallRecord("connect", callDuration);
+        } else if (callSession.status === "calling") {
+          await saveCallRecord("cancel");
+        }
       }
     }
 
@@ -1781,6 +1849,40 @@ export default function Chat() {
       nurse: "/imgs/nurse.png",
     };
     return roleAvatars[user?.role || ""] || null;
+  };
+
+  // 规范化通话记录展示文案
+  const formatCallRecordText = (item: any): string => {
+    const tryParse = (text: unknown): any | null => {
+      if (typeof text !== "string") return null;
+      const t = text.trim();
+      if (!(t.startsWith("{") && t.endsWith("}"))) return null;
+      try { return JSON.parse(t); } catch { return null; }
+    };
+
+    const obj = tryParse(item?.content) || {};
+    const status: string | undefined = item?.status || obj?.status || obj?.kind;
+    const time: number | undefined = typeof item?.time === "number" ? item.time : (typeof obj?.time === "number" ? obj.time : undefined);
+
+    if (status === "cancel" || status === "call_cancel") {
+      return "已取消通话";
+    }
+    if (status === "refusal" || status === "reject" || status === "call_reject") {
+      return "已拒绝通话";
+    }
+    if (status === "connect" || status === "call_end") {
+      if (typeof time === "number") {
+        const mm = Math.floor(time / 60);
+        const ss = (time % 60).toString().padStart(2, "0");
+        return `通话时长 ${mm}:${ss}`;
+      }
+      return "通话已结束";
+    }
+
+    if (typeof item?.content === "string" && !item.content.trim().startsWith("{")) {
+      return item.content;
+    }
+    return "通话记录";
   };
 
   // 过滤聊天中的通话信令类消息（例如首次紧急呼叫写入的 JSON 文本）
@@ -2528,14 +2630,7 @@ export default function Chat() {
                       ) : item.type === "voice_call" ||
                         item.type === "video_call" ? (
                         <span>
-                          {item.content}
-                          {typeof (item as any).time === "number"
-                            ? `（${Math.floor((item as any).time / 60)}:${(
-                              (item as any).time % 60
-                            )
-                              .toString()
-                              .padStart(2, "0")}）`
-                            : ""}
+                          {formatCallRecordText(item)}
                         </span>
                       ) : item.type === "location" ? (
                         <a

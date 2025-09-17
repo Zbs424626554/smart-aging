@@ -182,4 +182,22 @@ export class MessageService {
     );
     return responseData;
   }
+
+  // 兜底：通过 /send 在两人间新建对话并发第一条消息
+  static async sendMessageByPair(data: {
+    sender: string;
+    receiver: string;
+    content: string;
+    type?: string;
+    senderRole?: string;
+    receiverRole?: string;
+    senderRealname?: string;
+    receiverRealname?: string;
+  }) {
+    const { data: responseData } = await http.post(
+      "/send",
+      data
+    );
+    return responseData;
+  }
 }

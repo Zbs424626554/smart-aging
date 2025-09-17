@@ -33,6 +33,7 @@
     "morgan": "^1.10.1",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
+    "node-turn": "^0.0.6",
     "openai": "^4.104.0",
     "qrcode": "^1.5.4",
     "serve-index": "^1.9.1",

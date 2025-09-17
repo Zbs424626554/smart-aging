@@ -816,6 +816,19 @@ export default function Chat() {
       }
     };
 
+    // 额外调试：ICE 收集与错误
+    try {
+      pc.onicegatheringstatechange = () => {
+        console.log('[RTC] iceGatheringState=', pc.iceGatheringState);
+      };
+      (pc as any).onicecandidateerror = (e: any) => {
+        console.warn('[RTC] onicecandidateerror', e);
+      };
+      pc.onnegotiationneeded = () => {
+        console.log('[RTC] onnegotiationneeded');
+      };
+    } catch { }
+
     // 处理远程媒体流
     pc.ontrack = (event) => {
       const remoteStream = event.streams[0];

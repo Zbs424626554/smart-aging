@@ -119,7 +119,12 @@ export class WebSocketService {
           // 调试：日志打印消息类型，辅助定位通话邀请是否发出
           try {
             const message: WebSocketMessage = JSON.parse(event.data);
-            if (message?.type === 'call_invite' || message?.type === 'webrtc_offer') {
+            if (
+              message?.type === 'call_invite' ||
+              message?.type === 'webrtc_offer' ||
+              message?.type === 'webrtc_answer' ||
+              message?.type === 'webrtc_ice_candidate'
+            ) {
               console.log('[WS] recv', message.type, message);
             }
             // 缓存最后一次来电邀请，便于路由跳转后仍能弹窗
@@ -204,6 +209,12 @@ export class WebSocketService {
   // 发送消息
   send(message: WebSocketMessage) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      try {
+        const t = message?.type as string;
+        if (t && (t.startsWith('webrtc_') || t.startsWith('call_'))) {
+          console.log('[WS] send', t, message);
+        }
+      } catch { }
       this.ws.send(JSON.stringify(message));
     } else {
       console.warn("WebSocket未连接，无法发送消息");
@@ -215,7 +226,8 @@ export class WebSocketService {
     const { type, data, conversationId } = message;
 
     // 触发对应类型的监听器
-    const typeListeners = this.listeners.get(type);
+    const normalizedType = type === 'emergency_updated' ? 'emergency:updated' : type;
+    const typeListeners = this.listeners.get(normalizedType);
     if (typeListeners) {
       typeListeners.forEach((callback) => callback(data));
     }

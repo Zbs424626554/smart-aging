@@ -26,6 +26,18 @@ import newDevelopElderHealthRoutes from "./routes/newDevelop/elderhealth";
 import newDevelopCommunityRoutes from "./routes/newDevelop/community";
 import newDevelopSttRoutes from "./routes/newDevelop/stt";
 import newDevelopFriendRoutes from "./routes/newDevelop/friend";
+// 开发内置 TURN（仅在 ENABLE_TURN=1 时启用）
+// 使用 require 以避免类型定义问题
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const TurnServer: any = (() => {
+  try {
+    // 动态加载，生产未启用时不增加依赖成本
+    // @ts-ignore
+    return require('node-turn');
+  } catch {
+    return null;
+  }
+})();
 
 dotenv.config();
 
@@ -543,6 +555,25 @@ export function broadcastConversationUpdated(conversationData: any) {
   }
 }
 
+// 通过原生 WebSocket 广播紧急事件（给指定用户名列表；为空则全体）
+export function broadcastEmergencyUpdated(payload: any, targetUsernames?: string[]) {
+  const message = JSON.stringify({ type: "emergency_updated", data: payload, timestamp: Date.now() });
+  if (Array.isArray(targetUsernames) && targetUsernames.length > 0) {
+    targetUsernames.forEach((username) => {
+      const conn = userConnections.get(username);
+      if (conn && conn.ws.readyState === WebSocket.OPEN) {
+        conn.ws.send(message);
+      }
+    });
+  } else {
+    userConnections.forEach((conn) => {
+      if (conn.ws.readyState === WebSocket.OPEN) {
+        conn.ws.send(message);
+      }
+    });
+  }
+}
+
 // 清理不活跃连接
 setInterval(() => {
   const now = Date.now();
@@ -558,6 +589,40 @@ setInterval(() => {
 
 // 进程结束时清理心跳定时器
 process.on("exit", () => clearInterval(heartbeatInterval));
+
+// 启动内置 TURN（开发/内网联调用）
+(() => {
+  const enable = process.env.ENABLE_TURN === '1';
+  if (!enable) return;
+  if (!TurnServer) {
+    console.warn('[TURN] ENABLE_TURN=1 但未安装 node-turn 依赖，请在 server 下执行: npm i node-turn');
+    return;
+  }
+  const listenIp = process.env.TURN_LISTEN_IP || '0.0.0.0';
+  const listenPort = Number(process.env.TURN_LISTEN_PORT || 3478);
+  const publicIp = process.env.TURN_PUBLIC_IP; // 建议填机器A的局域网IP，如 192.168.x.x
+  const minPort = Number(process.env.TURN_MIN_PORT || 49160);
+  const maxPort = Number(process.env.TURN_MAX_PORT || 49200);
+  const user = process.env.TURN_USER || 'sa';
+  const pass = process.env.TURN_PASS || 'sa_turn_pwd';
+  try {
+    const turn = new TurnServer({
+      listeningIps: [listenIp],
+      listeningPort: listenPort,
+      // 仅当提供公网/局域网对外可达 IP 时设置 externalIps，便于候选生成
+      externalIps: publicIp ? [publicIp] : undefined,
+      realm: 'smart-aging',
+      authMech: 'long-term',
+      credentials: { [user]: pass },
+      minPort,
+      maxPort,
+    });
+    turn.start();
+    console.log(`[TURN] started on ${listenIp}:${listenPort} (relay ${minPort}-${maxPort}) public=${publicIp || 'auto'}`);
+  } catch (e) {
+    console.error('[TURN] start failed:', e);
+  }
+})();
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
